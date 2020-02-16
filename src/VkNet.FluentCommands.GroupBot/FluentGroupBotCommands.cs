@@ -36,5 +36,22 @@ namespace VkNet.FluentCommands.GroupBot
         {
             _botClient = botClient;
         }
+        
+        /// <summary>
+        ///     Authorize of the bot.
+        /// </summary>
+        /// <param name="apiAuthParams">Authorization parameter.</param>
+        /// <exception cref="ArgumentNullException">Thrown if apiAuthParams is null.</exception>
+        public async Task InitBotAsync(IApiAuthParams apiAuthParams)
+        {
+            if (apiAuthParams == null)
+            {
+                throw new ArgumentNullException(nameof(apiAuthParams));
+            }
+
+            await _botClient.AuthorizeAsync(apiAuthParams);
+        }
+        
+        
     }
 }

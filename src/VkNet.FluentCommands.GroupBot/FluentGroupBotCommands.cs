@@ -47,8 +47,12 @@ namespace VkNet.FluentCommands.GroupBot
         ///     Text commands storage.
         /// </summary>
         private readonly ConcurrentDictionary<(string, RegexOptions), Func<IVkApi, GroupUpdate, CancellationToken, Task>>
-            _textCommands =
-                new ConcurrentDictionary<(string, RegexOptions), Func<IVkApi, GroupUpdate, CancellationToken, Task>>();
+            _textCommands = new ConcurrentDictionary<(string, RegexOptions), Func<IVkApi, GroupUpdate, CancellationToken, Task>>();
+
+        /// <summary>
+        ///     Stores the message logic exception handler
+        /// </summary>
+        private Func<IVkApi, GroupUpdate, System.Exception, CancellationToken, Task> _botException;
 
         /// <summary>
         ///      Initializes a new instance of the <see cref="FluentGroupBotCommands{TBotClient}"/> class.
@@ -124,6 +128,15 @@ namespace VkNet.FluentCommands.GroupBot
 
             _textCommands.TryAdd(key: (tuple.pattern, tuple.options), value: func);
         }
+        
+        /// <summary>
+        ///     The trigger for the exception handling logic of the message.
+        /// </summary>
+        /// <param name="botException">Trigger actions performed.</param>
+        public void OnBotException(Func<IVkApi, GroupUpdate, System.Exception, CancellationToken, Task> botException)
+        {
+            _botException = botException ?? throw new ArgumentNullException(nameof(botException));
+        }
 
         /// <summary>
         ///     Starts receiving messages.
@@ -157,19 +170,27 @@ namespace VkNet.FluentCommands.GroupBot
 
                 Parallel.ForEach(source: longPollHistory.Updates, body: async update =>
                 {
-                    if (update.Type == GroupUpdateType.MessageNew)
+                    try
                     {
-                        var command = _textCommands
-                            .Where(predicate: x => Regex.IsMatch(input: update.MessageNew.Message.Text, pattern: x.Key.Item1, options: x.Key.Item2))
-                            .Select(selector: x => x.Value)
-                            .SingleOrDefault();
-
-                        if (command == null)
+                        if (update.Type == GroupUpdateType.MessageNew)
                         {
-                            return;
-                        }
+                            var command = _textCommands
+                                .Where(predicate: x => Regex.IsMatch(input: update.MessageNew.Message.Text,
+                                    pattern: x.Key.Item1, options: x.Key.Item2))
+                                .Select(selector: x => x.Value)
+                                .SingleOrDefault();
 
-                        await command(arg1: _botClient, arg2: update, arg3: cancellationToken);
+                            if (command == null)
+                            {
+                                return;
+                            }
+
+                            await command(arg1: _botClient, arg2: update, arg3: cancellationToken);
+                        }
+                    }
+                    catch (System.Exception e)
+                    {
+                        _botException?.Invoke(_botClient, update, e, cancellationToken);
                     }
                 });
                 

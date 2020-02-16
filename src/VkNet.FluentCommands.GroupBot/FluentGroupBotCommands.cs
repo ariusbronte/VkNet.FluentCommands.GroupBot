@@ -7,6 +7,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using VkNet.Abstractions;
 using VkNet.Enums.SafetyEnums;
+using VkNet.Exception;
 using VkNet.Model;
 using VkNet.Model.GroupUpdate;
 using VkNet.Model.RequestParams;
@@ -133,7 +134,7 @@ namespace VkNet.FluentCommands.GroupBot
 
             _textCommands.TryAdd(key: (tuple.pattern, tuple.options), value: func);
         }
-        
+
         /// <summary>
         ///     The trigger for the exception handling logic of the message.
         /// </summary>
@@ -158,19 +159,19 @@ namespace VkNet.FluentCommands.GroupBot
         /// <param name="cancellationToken">Propagates notification that operations should be canceled.</param>
         public async Task ReceiveMessageAsync(CancellationToken cancellationToken = default)
         {
-            try
+            cancellationToken.ThrowIfCancellationRequested();
+
+            var longPollServer = await GetLongPollServerAsync(
+                groupId: _longPollConfiguration.GroupId,
+                cancellationToken: cancellationToken);
+
+            var server = longPollServer.Server;
+            var ts = longPollServer.Ts;
+            var key = longPollServer.Key;
+
+            while (!cancellationToken.IsCancellationRequested)
             {
-                cancellationToken.ThrowIfCancellationRequested();
-
-                var longPollServer = await GetLongPollServerAsync(
-                    groupId: _longPollConfiguration.GroupId,
-                    cancellationToken: cancellationToken);
-
-                var server = longPollServer.Server;
-                var ts = longPollServer.Ts;
-                var key = longPollServer.Key;
-
-                while (!cancellationToken.IsCancellationRequested)
+                try
                 {
                     var longPollHistory = await GetBotsLongPollHistoryAsync(
                         key: key,
@@ -215,12 +216,28 @@ namespace VkNet.FluentCommands.GroupBot
 
                     ts = longPollHistory.Ts;
                 }
-            }
-            catch (System.Exception e)
-            {
-                if (_exception != null)
+                catch (LongPollKeyExpiredException e)
                 {
-                    await _exception.Invoke(e, cancellationToken);
+                    longPollServer = await GetLongPollServerAsync(
+                        groupId: _longPollConfiguration.GroupId,
+                        cancellationToken: cancellationToken);
+
+                    server = longPollServer.Server;
+                    ts = longPollServer.Ts;
+                    key = longPollServer.Key;
+                    await Task.Delay(millisecondsDelay: 5000, cancellationToken: cancellationToken);
+
+                    if (_exception != null)
+                    {
+                        await _exception.Invoke(e, cancellationToken);
+                    }
+                }
+                catch (System.Exception e)
+                {
+                    if (_exception != null)
+                    {
+                        await _exception.Invoke(e, cancellationToken);
+                    }
                 }
             }
         }

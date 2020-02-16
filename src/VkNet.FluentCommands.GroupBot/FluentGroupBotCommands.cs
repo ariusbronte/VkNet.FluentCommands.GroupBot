@@ -55,6 +55,11 @@ namespace VkNet.FluentCommands.GroupBot
         private Func<IVkApi, GroupUpdate, System.Exception, CancellationToken, Task> _botException;
 
         /// <summary>
+        ///     Stores the library exception handler.
+        /// </summary>
+        private Func<System.Exception, CancellationToken, Task> _exception;
+
+        /// <summary>
         ///      Initializes a new instance of the <see cref="FluentGroupBotCommands{TBotClient}"/> class.
         /// </summary>
         /// <param name="botClient">Implementation of interaction with VK.</param>
@@ -139,62 +144,84 @@ namespace VkNet.FluentCommands.GroupBot
         }
 
         /// <summary>
+        ///     The trigger for Library exception handling.
+        /// </summary>
+        /// <param name="exception">Trigger actions performed.</param>
+        public void OnException(Func<System.Exception, CancellationToken, Task> exception)
+        {
+            _exception = exception ?? throw new ArgumentNullException(nameof(exception));
+        }
+
+        /// <summary>
         ///     Starts receiving messages.
         /// </summary>
         /// <param name="cancellationToken">Propagates notification that operations should be canceled.</param>
         public async Task ReceiveMessageAsync(CancellationToken cancellationToken = default)
         {
-            cancellationToken.ThrowIfCancellationRequested();
-            
-            var longPollServer = await GetLongPollServerAsync(
-                groupId: _longPollConfiguration.GroupId,
-                cancellationToken: cancellationToken);
-            
-            var server = longPollServer.Server;
-            var ts = longPollServer.Ts;
-            var key = longPollServer.Key;
-
-            while (!cancellationToken.IsCancellationRequested)
+            try
             {
-                var longPollHistory = await GetBotsLongPollHistoryAsync(
-                    key: key,
-                    server: server,
-                    ts: ts,
-                    wait: _longPollConfiguration.Wait,
+                cancellationToken.ThrowIfCancellationRequested();
+
+                var longPollServer = await GetLongPollServerAsync(
+                    groupId: _longPollConfiguration.GroupId,
                     cancellationToken: cancellationToken);
 
-                if (longPollHistory?.Updates == null)
-                {
-                    continue;
-                }
+                var server = longPollServer.Server;
+                var ts = longPollServer.Ts;
+                var key = longPollServer.Key;
 
-                Parallel.ForEach(source: longPollHistory.Updates, body: async update =>
+                while (!cancellationToken.IsCancellationRequested)
                 {
-                    try
+                    var longPollHistory = await GetBotsLongPollHistoryAsync(
+                        key: key,
+                        server: server,
+                        ts: ts,
+                        wait: _longPollConfiguration.Wait,
+                        cancellationToken: cancellationToken);
+
+                    if (longPollHistory?.Updates == null)
                     {
-                        if (update.Type == GroupUpdateType.MessageNew)
+                        continue;
+                    }
+
+                    Parallel.ForEach(source: longPollHistory.Updates, body: async update =>
+                    {
+                        try
                         {
-                            var command = _textCommands
-                                .Where(predicate: x => Regex.IsMatch(input: update.MessageNew.Message.Text,
-                                    pattern: x.Key.Item1, options: x.Key.Item2))
-                                .Select(selector: x => x.Value)
-                                .SingleOrDefault();
-
-                            if (command == null)
+                            if (update.Type == GroupUpdateType.MessageNew)
                             {
-                                return;
-                            }
+                                var command = _textCommands
+                                    .Where(predicate: x => Regex.IsMatch(input: update.MessageNew.Message.Text,
+                                        pattern: x.Key.Item1, options: x.Key.Item2))
+                                    .Select(selector: x => x.Value)
+                                    .SingleOrDefault();
 
-                            await command(arg1: _botClient, arg2: update, arg3: cancellationToken);
+                                if (command == null)
+                                {
+                                    return;
+                                }
+
+                                await command(arg1: _botClient, arg2: update, arg3: cancellationToken);
+                            }
                         }
-                    }
-                    catch (System.Exception e)
-                    {
-                        _botException?.Invoke(_botClient, update, e, cancellationToken);
-                    }
-                });
-                
-                ts = longPollHistory.Ts;
+                        catch (System.Exception e)
+                        {
+                            if (_botException != null)
+                            {
+                                await _botException.Invoke(_botClient, update, e, cancellationToken);
+                            }
+                        }
+                    });
+
+                    ts = longPollHistory.Ts;
+                }
+            }
+            catch (System.Exception e)
+            {
+                if (_exception != null)
+                {
+                    await _exception.Invoke(e, cancellationToken);
+                }
             }
         }
 

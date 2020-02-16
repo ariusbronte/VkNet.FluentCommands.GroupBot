@@ -26,6 +26,11 @@ namespace VkNet.FluentCommands.GroupBot
         ///     Implementation of interaction with VK.
         /// </summary>
         private readonly TBotClient _botClient;
+
+        /// <summary>
+        ///     Longpoll configuration
+        /// </summary>
+        private GroupLongPollConfiguration _longPollConfiguration;
         
         // ReSharper disable once MemberCanBeProtected.Global
         /// <summary>
@@ -52,6 +57,13 @@ namespace VkNet.FluentCommands.GroupBot
             await _botClient.AuthorizeAsync(apiAuthParams);
         }
         
-        
+        /// <summary>
+        ///     Method to set custom <see cref="VkNet.FluentCommands.GroupBot.GroupLongPollConfiguration"/>.
+        /// </summary>
+        /// <param name="configuration">Custom long poll configuration.</param>
+        public void ConfigureGroupLongPoll(GroupLongPollConfiguration configuration)
+        {
+            _longPollConfiguration = configuration ?? throw new ArgumentNullException(nameof(configuration));
+        }
     }
 }

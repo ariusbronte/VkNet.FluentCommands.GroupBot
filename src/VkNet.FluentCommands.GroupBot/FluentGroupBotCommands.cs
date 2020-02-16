@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using System.Text.RegularExpressions;
@@ -23,7 +22,7 @@ namespace VkNet.FluentCommands.GroupBot
         /// <summary>
         ///      Initializes a new instance of the <see cref="FluentGroupBotCommands"/> class.
         /// </summary>
-        public FluentGroupBotCommands() : base(() => new VkApi())
+        public FluentGroupBotCommands() : base(botClient: () => new VkApi())
         {
         }
     }
@@ -69,10 +68,10 @@ namespace VkNet.FluentCommands.GroupBot
         {
             if (apiAuthParams == null)
             {
-                throw new ArgumentNullException(nameof(apiAuthParams));
+                throw new ArgumentNullException(paramName: nameof(apiAuthParams));
             }
 
-            await _botClient.AuthorizeAsync(apiAuthParams);
+            await _botClient.AuthorizeAsync(@params: apiAuthParams);
         }
 
         /// <summary>
@@ -81,7 +80,7 @@ namespace VkNet.FluentCommands.GroupBot
         /// <param name="configuration">Custom long poll configuration.</param>
         public void ConfigureGroupLongPoll(GroupLongPollConfiguration configuration)
         {
-            _longPollConfiguration = configuration ?? throw new ArgumentNullException(nameof(configuration));
+            _longPollConfiguration = configuration ?? throw new ArgumentNullException(paramName: nameof(configuration));
         }
 
         /// <summary>
@@ -94,7 +93,7 @@ namespace VkNet.FluentCommands.GroupBot
         /// <exception cref="ArgumentNullException">Thrown if trigger actions in null.</exception>
         public void OnText(string pattern, Func<IVkApi, GroupUpdate, CancellationToken, Task> func)
         {
-            OnText((pattern, RegexOptions.None), func);
+            OnText(tuple: (pattern, RegexOptions.None), func: func);
         }
 
         /// <summary>
@@ -108,23 +107,22 @@ namespace VkNet.FluentCommands.GroupBot
         public void OnText((string pattern, RegexOptions options) tuple,
             Func<IVkApi, GroupUpdate, CancellationToken, Task> func)
         {
-            if (string.IsNullOrWhiteSpace(tuple.pattern))
+            if (string.IsNullOrWhiteSpace(value: tuple.pattern))
             {
-                throw new ArgumentException("Value cannot be null or whitespace.", nameof(tuple.pattern));
+                throw new ArgumentException(message: "Value cannot be null or whitespace.", paramName: nameof(tuple.pattern));
             }
 
-            if (!Enum.IsDefined(typeof(RegexOptions), tuple.options))
+            if (!Enum.IsDefined(enumType: typeof(RegexOptions), value: tuple.options))
             {
-                throw new InvalidEnumArgumentException(nameof(tuple.options), (int) tuple.options,
-                    typeof(RegexOptions));
+                throw new InvalidEnumArgumentException(argumentName: nameof(tuple.options), invalidValue: (int) tuple.options, enumClass: typeof(RegexOptions));
             }
 
             if (func == null)
             {
-                throw new ArgumentNullException(nameof(func));
+                throw new ArgumentNullException(paramName: nameof(func));
             }
 
-            _textCommands.TryAdd((tuple.pattern, tuple.options), func);
+            _textCommands.TryAdd(key: (tuple.pattern, tuple.options), value: func);
         }
 
         /// <summary>
@@ -135,27 +133,35 @@ namespace VkNet.FluentCommands.GroupBot
         {
             cancellationToken.ThrowIfCancellationRequested();
             
-            var longPollServer = await GetLongPollServerAsync(_longPollConfiguration.GroupId, cancellationToken);
+            var longPollServer = await GetLongPollServerAsync(
+                groupId: _longPollConfiguration.GroupId,
+                cancellationToken: cancellationToken);
+            
             var server = longPollServer.Server;
             var ts = longPollServer.Ts;
             var key = longPollServer.Key;
 
             while (!cancellationToken.IsCancellationRequested)
             {
-                var longPollHistory = await GetBotsLongPollHistoryAsync(key, server, ts, _longPollConfiguration.Wait, cancellationToken);
+                var longPollHistory = await GetBotsLongPollHistoryAsync(
+                    key: key,
+                    server: server,
+                    ts: ts,
+                    wait: _longPollConfiguration.Wait,
+                    cancellationToken: cancellationToken);
 
                 if (longPollHistory?.Updates == null)
                 {
                     continue;
                 }
 
-                Parallel.ForEach(longPollHistory.Updates, async update =>
+                Parallel.ForEach(source: longPollHistory.Updates, body: async update =>
                 {
                     if (update.Type == GroupUpdateType.MessageNew)
                     {
                         var command = _textCommands
-                            .Where(x => Regex.IsMatch(update.MessageNew.Message.Text, x.Key.Item1, x.Key.Item2))
-                            .Select(x => x.Value)
+                            .Where(predicate: x => Regex.IsMatch(input: update.MessageNew.Message.Text, pattern: x.Key.Item1, options: x.Key.Item2))
+                            .Select(selector: x => x.Value)
                             .SingleOrDefault();
 
                         if (command == null)
@@ -163,7 +169,7 @@ namespace VkNet.FluentCommands.GroupBot
                             return;
                         }
 
-                        await command(_botClient, update, cancellationToken);
+                        await command(arg1: _botClient, arg2: update, arg3: cancellationToken);
                     }
                 });
                 
@@ -182,7 +188,7 @@ namespace VkNet.FluentCommands.GroupBot
             CancellationToken cancellationToken = default)
         {
             cancellationToken.ThrowIfCancellationRequested();
-            return await _botClient.Groups.GetLongPollServerAsync(groupId);
+            return await _botClient.Groups.GetLongPollServerAsync(groupId: groupId);
         }
 
         /// <summary>
@@ -202,7 +208,7 @@ namespace VkNet.FluentCommands.GroupBot
             CancellationToken cancellationToken = default)
         {
             cancellationToken.ThrowIfCancellationRequested();
-            return await _botClient.Groups.GetBotsLongPollHistoryAsync(new BotsLongPollHistoryParams
+            return await _botClient.Groups.GetBotsLongPollHistoryAsync(@params: new BotsLongPollHistoryParams
             {
                 Key = key,
                 Server = server,

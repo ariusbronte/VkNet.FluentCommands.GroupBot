@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using System.Text.RegularExpressions;
@@ -249,7 +248,8 @@ namespace VkNet.FluentCommands.GroupBot
                 Wait = wait
             });
         }
-
+        
+        /// <inheritdoc cref="IDisposable" />
         public void Dispose()
         {
             GC.SuppressFinalize(this);

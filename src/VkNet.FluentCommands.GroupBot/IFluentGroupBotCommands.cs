@@ -66,8 +66,5 @@ namespace VkNet.FluentCommands.GroupBot
         /// </summary>
         /// <param name="cancellationToken">Propagates notification that operations should be canceled.</param>
         Task ReceiveMessageAsync(CancellationToken cancellationToken = default);
-
-        /// <inheritdoc cref="IDisposable" />
-        void Dispose();
     }
 }

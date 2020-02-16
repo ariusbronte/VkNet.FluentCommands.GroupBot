@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using System.Text.RegularExpressions;
@@ -28,11 +29,8 @@ namespace VkNet.FluentCommands.GroupBot
         }
     }
 
-    /// <summary>
-    ///     Main entry class to use VkNet.FluentCommands.GroupBot.
-    /// </summary>
-    /// <typeparam name="TBotClient">Custom implementation of interaction with VK.</typeparam>
-    public class FluentGroupBotCommands<TBotClient> where TBotClient : IVkApi
+    /// <inheritdoc />
+    public class FluentGroupBotCommands<TBotClient> : IFluentGroupBotCommands where TBotClient : IVkApi
     {
         /// <summary>
         ///     Implementation of interaction with VK.
@@ -69,11 +67,7 @@ namespace VkNet.FluentCommands.GroupBot
             _botClient = botClient();
         }
 
-        /// <summary>
-        ///     Authorize of the bot.
-        /// </summary>
-        /// <param name="apiAuthParams">Authorization parameter.</param>
-        /// <exception cref="ArgumentNullException">Thrown if apiAuthParams is null.</exception>
+        /// <inheritdoc />
         public async Task InitBotAsync(IApiAuthParams apiAuthParams)
         {
             if (apiAuthParams == null)
@@ -83,37 +77,20 @@ namespace VkNet.FluentCommands.GroupBot
 
             await _botClient.AuthorizeAsync(@params: apiAuthParams);
         }
-
-        /// <summary>
-        ///     Method to set custom <see cref="VkNet.FluentCommands.GroupBot.GroupLongPollConfiguration"/>.
-        /// </summary>
-        /// <param name="configuration">Custom long poll configuration.</param>
+        
+        /// <inheritdoc />
         public void ConfigureGroupLongPoll(GroupLongPollConfiguration configuration)
         {
             _longPollConfiguration = configuration ?? throw new ArgumentNullException(paramName: nameof(configuration));
         }
 
-        /// <summary>
-        ///     Trigger on a text command.
-        /// </summary>
-        /// <param name="pattern">Regular expression.</param>
-        /// <param name="func">Trigger actions performed.</param>
-        /// <exception cref="ArgumentException">Thrown if regular expression is null or whitespace.</exception>
-        /// <exception cref="InvalidEnumArgumentException">Thrown if regex options is not defined.</exception>
-        /// <exception cref="ArgumentNullException">Thrown if trigger actions in null.</exception>
+        /// <inheritdoc />
         public void OnText(string pattern, Func<IVkApi, GroupUpdate, CancellationToken, Task> func)
         {
             OnText(tuple: (pattern, RegexOptions.None), func: func);
         }
 
-        /// <summary>
-        ///     Trigger on a text command.
-        /// </summary>
-        /// <param name="tuple">Regular expression and Regex options.</param>
-        /// <param name="func">Trigger actions performed.</param>
-        /// <exception cref="ArgumentException">Thrown if regular expression is null or whitespace.</exception>
-        /// <exception cref="InvalidEnumArgumentException">Thrown if regex options is not defined.</exception>
-        /// <exception cref="ArgumentNullException">Thrown if trigger actions in null.</exception>
+        /// <inheritdoc />
         public void OnText((string pattern, RegexOptions options) tuple,
             Func<IVkApi, GroupUpdate, CancellationToken, Task> func)
         {
@@ -135,28 +112,19 @@ namespace VkNet.FluentCommands.GroupBot
             _textCommands.TryAdd(key: (tuple.pattern, tuple.options), value: func);
         }
 
-        /// <summary>
-        ///     The trigger for the exception handling logic of the message.
-        /// </summary>
-        /// <param name="botException">Trigger actions performed.</param>
+        /// <inheritdoc />
         public void OnBotException(Func<IVkApi, GroupUpdate, System.Exception, CancellationToken, Task> botException)
         {
             _botException = botException ?? throw new ArgumentNullException(nameof(botException));
         }
 
-        /// <summary>
-        ///     The trigger for Library exception handling.
-        /// </summary>
-        /// <param name="exception">Trigger actions performed.</param>
+        /// <inheritdoc />
         public void OnException(Func<System.Exception, CancellationToken, Task> exception)
         {
             _exception = exception ?? throw new ArgumentNullException(nameof(exception));
         }
 
-        /// <summary>
-        ///     Starts receiving messages.
-        /// </summary>
-        /// <param name="cancellationToken">Propagates notification that operations should be canceled.</param>
+        /// <inheritdoc />
         public async Task ReceiveMessageAsync(CancellationToken cancellationToken = default)
         {
             cancellationToken.ThrowIfCancellationRequested();
@@ -280,6 +248,11 @@ namespace VkNet.FluentCommands.GroupBot
                 Ts = ts,
                 Wait = wait
             });
+        }
+
+        public void Dispose()
+        {
+            GC.SuppressFinalize(this);
         }
     }
 }

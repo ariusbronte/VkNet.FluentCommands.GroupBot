@@ -8,11 +8,11 @@ Extension for [VkNet](https://github.com/vknet/vk) to quickly create bots.
 ### Add the package to the project
 **Package Manager**
 ``` powershell
-PM> Install-Package VkNet.FluentCommands.UserBot
+PM> Install-Package VkNet.FluentCommands.GroupBot
 ```
 **.NET CLI**
 ``` bash
-> dotnet add package VkNet.FluentCommands.UserBot
+> dotnet add package VkNet.FluentCommands.GroupBot
 ```
 ``` C#
 using VkNet.FluentCommands.GroupBot;

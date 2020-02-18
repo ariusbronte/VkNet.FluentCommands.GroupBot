@@ -76,7 +76,7 @@ namespace VkNet.FluentCommands.GroupBot
 
             await _botClient.AuthorizeAsync(@params: apiAuthParams);
         }
-        
+
         /// <inheritdoc />
         public void ConfigureGroupLongPoll(GroupLongPollConfiguration configuration)
         {
@@ -127,7 +127,6 @@ namespace VkNet.FluentCommands.GroupBot
         public async Task ReceiveMessageAsync(CancellationToken cancellationToken = default)
         {
             cancellationToken.ThrowIfCancellationRequested();
-
             var longPollServer = await GetLongPollServerAsync(cancellationToken: cancellationToken);
 
             var server = longPollServer.Server;
@@ -139,13 +138,12 @@ namespace VkNet.FluentCommands.GroupBot
                 try
                 {
                     var longPollHistory = await GetBotsLongPollHistoryAsync(key: key, server: server, ts: ts, cancellationToken: cancellationToken);
-
                     if (longPollHistory?.Updates == null)
                     {
                         continue;
                     }
 
-                    Parallel.ForEach(source: longPollHistory.Updates, body: async update =>
+                    foreach (var update in longPollHistory.Updates)
                     {
                         try
                         {
@@ -159,7 +157,7 @@ namespace VkNet.FluentCommands.GroupBot
 
                                 if (command == null)
                                 {
-                                    return;
+                                    continue;
                                 }
 
                                 await command(arg1: _botClient, arg2: update, arg3: cancellationToken);
@@ -167,12 +165,9 @@ namespace VkNet.FluentCommands.GroupBot
                         }
                         catch (System.Exception e)
                         {
-                            if (_botException != null)
-                            {
-                                await _botException.Invoke(_botClient, update, e, cancellationToken);
-                            }
+                            await (_botException?.Invoke(_botClient, update, e, cancellationToken) ?? throw e);
                         }
-                    });
+                    }
 
                     ts = longPollHistory.Ts;
                 }
@@ -183,7 +178,6 @@ namespace VkNet.FluentCommands.GroupBot
                     server = longPollServer.Server;
                     ts = longPollServer.Ts;
                     key = longPollServer.Key;
-                    await Task.Delay(millisecondsDelay: 5000, cancellationToken: cancellationToken);
 
                     if (_exception != null)
                     {
@@ -192,10 +186,7 @@ namespace VkNet.FluentCommands.GroupBot
                 }
                 catch (System.Exception e)
                 {
-                    if (_exception != null)
-                    {
-                        await _exception.Invoke(e, cancellationToken);
-                    }
+                    await (_exception?.Invoke(e, cancellationToken) ?? throw e);
                 }
             }
         }
@@ -234,7 +225,7 @@ namespace VkNet.FluentCommands.GroupBot
                 Wait = _longPollConfiguration.Wait
             });
         }
-        
+
         /// <inheritdoc cref="IDisposable" />
         public void Dispose()
         {

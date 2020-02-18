@@ -69,6 +69,12 @@ namespace VkNet.FluentCommands.GroupBot
         /// <exception cref="InvalidEnumArgumentException">Thrown if regex options is not defined.</exception>
         /// <exception cref="ArgumentNullException">Thrown if trigger actions in null.</exception>
         void OnText((long peerId, string pattern, RegexOptions options) tuple, Func<IVkApi, GroupUpdate, CancellationToken, Task> func);
+
+        /// <summary>
+        ///     Trigger on a photo command.
+        /// </summary>
+        /// <param name="func">Trigger actions performed.</param>
+        void OnPhoto(Func<IVkApi, GroupUpdate, CancellationToken, Task> func);
         
         /// <summary>
         ///     Trigger on a sticker command.

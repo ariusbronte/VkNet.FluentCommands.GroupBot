@@ -48,12 +48,13 @@ namespace VkNet.FluentCommands.GroupBot
         private readonly ConcurrentDictionary<(long?, string, RegexOptions), Func<IVkApi, GroupUpdate, CancellationToken, Task>>
             _textCommands = new ConcurrentDictionary<(long?, string, RegexOptions), Func<IVkApi, GroupUpdate, CancellationToken, Task>>();
         
-        
         /// <summary>
         ///     Sticker commands storage.
         /// </summary>
         private readonly ConcurrentDictionary<long, Func<IVkApi, GroupUpdate, CancellationToken, Task>>
             _stickerCommands = new ConcurrentDictionary<long, Func<IVkApi, GroupUpdate, CancellationToken, Task>>();
+
+        private Func<IVkApi, GroupUpdate, CancellationToken, Task> _onImageCommand;
 
         /// <summary>
         ///     Stores the message logic exception handler
@@ -165,6 +166,12 @@ namespace VkNet.FluentCommands.GroupBot
         }
 
         /// <inheritdoc />
+        public void OnPhoto(Func<IVkApi, GroupUpdate, CancellationToken, Task> func)
+        {
+            _onImageCommand = func ?? throw new ArgumentNullException(nameof(func));
+        }
+
+        /// <inheritdoc />
         public void OnBotException(Func<IVkApi, GroupUpdate, System.Exception, CancellationToken, Task> botException)
         {
             _botException = botException ?? throw new ArgumentNullException(nameof(botException));
@@ -211,6 +218,9 @@ namespace VkNet.FluentCommands.GroupBot
                                 case MessageType.Sticker:
                                     await OnStickerMessage(update, cancellationToken);
                                     break;
+                                case MessageType.Image:
+                                    await _onImageCommand(_botClient, update, cancellationToken);
+                                    break;
                                 case MessageType.None:
                                     break;
                             }
@@ -242,7 +252,7 @@ namespace VkNet.FluentCommands.GroupBot
                 }
             }
         }
-        
+
         /// <summary>
         ///     This method returns the type of incoming message.
         /// </summary>
@@ -258,6 +268,11 @@ namespace VkNet.FluentCommands.GroupBot
             if (message.Attachments.Any(x => x.Type == typeof(Sticker)))
             {
                 return MessageType.Sticker;
+            }
+
+            if (message.Attachments.Any(x => x.Type == typeof(Photo)))
+            {
+                return MessageType.Image;
             }
 
             return MessageType.None;
@@ -323,7 +338,7 @@ namespace VkNet.FluentCommands.GroupBot
 
             await command(_botClient, update, cancellationToken);
         }
-        
+
         /// <summary>
         ///     Get data for the connection
         /// </summary>

@@ -18,6 +18,11 @@
         /// <summary>
         ///     Sticker message type.
         /// </summary>
-        Sticker
+        Sticker,
+        
+        /// <summary>
+        ///     Image message type.
+        /// </summary>
+        Image,
     }
 }

@@ -128,9 +128,7 @@ namespace VkNet.FluentCommands.GroupBot
         {
             cancellationToken.ThrowIfCancellationRequested();
 
-            var longPollServer = await GetLongPollServerAsync(
-                groupId: _longPollConfiguration.GroupId,
-                cancellationToken: cancellationToken);
+            var longPollServer = await GetLongPollServerAsync(cancellationToken: cancellationToken);
 
             var server = longPollServer.Server;
             var ts = longPollServer.Ts;
@@ -140,12 +138,7 @@ namespace VkNet.FluentCommands.GroupBot
             {
                 try
                 {
-                    var longPollHistory = await GetBotsLongPollHistoryAsync(
-                        key: key,
-                        server: server,
-                        ts: ts,
-                        wait: _longPollConfiguration.Wait,
-                        cancellationToken: cancellationToken);
+                    var longPollHistory = await GetBotsLongPollHistoryAsync(key: key, server: server, ts: ts, cancellationToken: cancellationToken);
 
                     if (longPollHistory?.Updates == null)
                     {
@@ -185,9 +178,7 @@ namespace VkNet.FluentCommands.GroupBot
                 }
                 catch (LongPollKeyExpiredException e)
                 {
-                    longPollServer = await GetLongPollServerAsync(
-                        groupId: _longPollConfiguration.GroupId,
-                        cancellationToken: cancellationToken);
+                    longPollServer = await GetLongPollServerAsync(cancellationToken: cancellationToken);
 
                     server = longPollServer.Server;
                     ts = longPollServer.Ts;
@@ -212,15 +203,12 @@ namespace VkNet.FluentCommands.GroupBot
         /// <summary>
         ///     Get data for the connection
         /// </summary>
-        /// <param name="groupId">Group identifier.</param>
         /// <param name="cancellationToken">Propagates notification that operations should be canceled.</param>
         /// <returns>Returns data for the connection to long poll</returns>
-        private async Task<LongPollServerResponse> GetLongPollServerAsync(
-            ulong groupId,
-            CancellationToken cancellationToken = default)
+        private async Task<LongPollServerResponse> GetLongPollServerAsync(CancellationToken cancellationToken = default)
         {
             cancellationToken.ThrowIfCancellationRequested();
-            return await _botClient.Groups.GetLongPollServerAsync(groupId: groupId);
+            return await _botClient.Groups.GetLongPollServerAsync(groupId: _longPollConfiguration.GroupId);
         }
 
         /// <summary>
@@ -229,14 +217,12 @@ namespace VkNet.FluentCommands.GroupBot
         /// <param name="key">A secret session key.</param>
         /// <param name="server">Server address.</param>
         /// <param name="ts">the number of the last event to start receiving data from.</param>
-        /// <param name="wait">Wait time</param>
         /// <param name="cancellationToken">Propagates notification that operations should be canceled.</param>
         /// <returns>Returns group events.</returns>
         private async Task<BotsLongPollHistoryResponse> GetBotsLongPollHistoryAsync(
             string key,
             string server,
             string ts,
-            int wait,
             CancellationToken cancellationToken = default)
         {
             cancellationToken.ThrowIfCancellationRequested();
@@ -245,7 +231,7 @@ namespace VkNet.FluentCommands.GroupBot
                 Key = key,
                 Server = server,
                 Ts = ts,
-                Wait = wait
+                Wait = _longPollConfiguration.Wait
             });
         }
         

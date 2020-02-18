@@ -45,8 +45,8 @@ namespace VkNet.FluentCommands.GroupBot
         /// <summary>
         ///     Text commands storage.
         /// </summary>
-        private readonly ConcurrentDictionary<(string, RegexOptions), Func<IVkApi, GroupUpdate, CancellationToken, Task>>
-            _textCommands = new ConcurrentDictionary<(string, RegexOptions), Func<IVkApi, GroupUpdate, CancellationToken, Task>>();
+        private readonly ConcurrentDictionary<(long?, string, RegexOptions), Func<IVkApi, GroupUpdate, CancellationToken, Task>>
+            _textCommands = new ConcurrentDictionary<(long?, string, RegexOptions), Func<IVkApi, GroupUpdate, CancellationToken, Task>>();
         
         
         /// <summary>
@@ -96,10 +96,39 @@ namespace VkNet.FluentCommands.GroupBot
         {
             OnText(tuple: (pattern, RegexOptions.None), func: func);
         }
-
+        
         /// <inheritdoc />
-        public void OnText((string pattern, RegexOptions options) tuple,
-            Func<IVkApi, GroupUpdate, CancellationToken, Task> func)
+        public void OnText((string pattern, RegexOptions options) tuple, Func<IVkApi, GroupUpdate, CancellationToken, Task> func)
+        {
+            OnTextHandler(tuple: (null, tuple.pattern, tuple.options), func: func);
+        }
+        
+        /// <inheritdoc />
+        public void OnText((long peerId, string pattern) tuple, Func<IVkApi, GroupUpdate, CancellationToken, Task> func)
+        {
+            OnText(tuple: (tuple.peerId, tuple.pattern, RegexOptions.None), func: func);
+        }
+        
+        /// <inheritdoc />
+        public void OnText((long peerId, string pattern, RegexOptions options) tuple, Func<IVkApi, GroupUpdate, CancellationToken, Task> func)
+        {
+            if (tuple.peerId <= 0)
+            {
+                throw new ArgumentOutOfRangeException(nameof(tuple.peerId));
+            }
+            
+            OnTextHandler(tuple: tuple, func: func);
+        }
+
+        /// <summary>
+        ///     The main handler for all incoming message triggers
+        /// </summary>
+        /// <param name="tuple">Regular expression and Regex options.</param>
+        /// <param name="func">Trigger actions performed.</param>
+        /// <exception cref="ArgumentException">Thrown if regular expression is null or whitespace.</exception>
+        /// <exception cref="InvalidEnumArgumentException">Thrown if regex options is not defined.</exception>
+        /// <exception cref="ArgumentNullException">Thrown if trigger actions in null.</exception>
+        private void OnTextHandler((long? peerId, string pattern, RegexOptions options) tuple, Func<IVkApi, GroupUpdate, CancellationToken, Task> func)
         {
             if (string.IsNullOrWhiteSpace(value: tuple.pattern))
             {
@@ -116,7 +145,7 @@ namespace VkNet.FluentCommands.GroupBot
                 throw new ArgumentNullException(paramName: nameof(func));
             }
 
-            _textCommands.TryAdd(key: (tuple.pattern, tuple.options), value: func);
+            _textCommands.TryAdd(key: (tuple.peerId, tuple.pattern, tuple.options), value: func);
         }
 
         /// <inheritdoc />
@@ -242,12 +271,22 @@ namespace VkNet.FluentCommands.GroupBot
         private async Task OnTextMessage(GroupUpdate update, CancellationToken cancellationToken = default)
         {
             cancellationToken.ThrowIfCancellationRequested();
-
+            
             var command = _textCommands
                 .AsParallel()
                 .Where(x =>
                 {
-                    return Regex.IsMatch(update.MessageNew.Message.Text, x.Key.Item1, x.Key.Item2);
+                    var peerId = x.Key.Item1;
+                    var pattern = x.Key.Item2;
+                    var options = x.Key.Item3;
+                    var message = update.MessageNew.Message;
+
+                    if (peerId == message.PeerId)
+                    {
+                        return Regex.IsMatch(message.Text, pattern, options);
+                    }
+                    
+                    return !peerId.HasValue && Regex.IsMatch(message.Text, pattern, options);
                 })
                 .Select(x => x.Value)
                 .SingleOrDefault();

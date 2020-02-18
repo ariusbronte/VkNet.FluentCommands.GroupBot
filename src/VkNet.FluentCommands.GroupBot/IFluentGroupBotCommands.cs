@@ -46,9 +46,30 @@ namespace VkNet.FluentCommands.GroupBot
         /// <exception cref="ArgumentException">Thrown if regular expression is null or whitespace.</exception>
         /// <exception cref="InvalidEnumArgumentException">Thrown if regex options is not defined.</exception>
         /// <exception cref="ArgumentNullException">Thrown if trigger actions in null.</exception>
-        void OnText((string pattern, RegexOptions options) tuple,
-            Func<IVkApi, GroupUpdate, CancellationToken, Task> func);
+        void OnText((string pattern, RegexOptions options) tuple, Func<IVkApi, GroupUpdate, CancellationToken, Task> func);
 
+        /// <summary>
+        ///     Trigger on a text command.
+        /// </summary>
+        /// <param name="tuple">Regular expression and Regex options.</param>
+        /// <param name="func">Trigger actions performed.</param>
+        /// <exception cref="ArgumentOutOfRangeException">Thrown if sticker id is less than or equal to zero.</exception>
+        /// <exception cref="ArgumentException">Thrown if regular expression is null or whitespace.</exception>
+        /// <exception cref="InvalidEnumArgumentException">Thrown if regex options is not defined.</exception>
+        /// <exception cref="ArgumentNullException">Thrown if trigger actions in null.</exception>
+        void OnText((long peerId, string pattern) tuple, Func<IVkApi, GroupUpdate, CancellationToken, Task> func);
+
+        /// <summary>
+        ///     Trigger on a text command.
+        /// </summary>
+        /// <param name="tuple">Regular expression and Regex options.</param>
+        /// <param name="func">Trigger actions performed.</param>
+        /// <exception cref="ArgumentOutOfRangeException">Thrown if sticker id is less than or equal to zero.</exception>
+        /// <exception cref="ArgumentException">Thrown if regular expression is null or whitespace.</exception>
+        /// <exception cref="InvalidEnumArgumentException">Thrown if regex options is not defined.</exception>
+        /// <exception cref="ArgumentNullException">Thrown if trigger actions in null.</exception>
+        void OnText((long peerId, string pattern, RegexOptions options) tuple, Func<IVkApi, GroupUpdate, CancellationToken, Task> func);
+        
         /// <summary>
         ///     Trigger on a sticker command.
         /// </summary>

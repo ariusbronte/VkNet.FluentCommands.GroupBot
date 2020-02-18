@@ -219,7 +219,10 @@ namespace VkNet.FluentCommands.GroupBot
                                     await OnStickerMessage(update, cancellationToken);
                                     break;
                                 case MessageType.Image:
-                                    await _onImageCommand(_botClient, update, cancellationToken);
+                                    if (_onImageCommand != null)
+                                    {
+                                        await _onImageCommand(_botClient, update, cancellationToken);
+                                    }
                                     break;
                                 case MessageType.None:
                                     break;

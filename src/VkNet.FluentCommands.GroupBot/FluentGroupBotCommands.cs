@@ -56,6 +56,8 @@ namespace VkNet.FluentCommands.GroupBot
 
         private Func<IVkApi, GroupUpdate, CancellationToken, Task> _onImageCommand;
 
+        private Func<IVkApi, GroupUpdate, CancellationToken, Task> _onStickerCommand;
+
         /// <summary>
         ///     Stores the message logic exception handler
         /// </summary>
@@ -165,6 +167,12 @@ namespace VkNet.FluentCommands.GroupBot
             _stickerCommands.TryAdd(stickerId, func);
         }
 
+        /// <inheritdoc />
+        public void OnSticker(Func<IVkApi, GroupUpdate, CancellationToken, Task> func)
+        {
+            _onStickerCommand = func ?? throw new ArgumentNullException(nameof(func));
+        }
+        
         /// <inheritdoc />
         public void OnPhoto(Func<IVkApi, GroupUpdate, CancellationToken, Task> func)
         {
@@ -337,7 +345,15 @@ namespace VkNet.FluentCommands.GroupBot
                 .Select(x => x.Value)
                 .SingleOrDefault();
 
-            if (command == null) return;
+            if (command == null)
+            {
+                if (_onStickerCommand != null)
+                {
+                    await _onStickerCommand(_botClient, update, cancellationToken);
+                }
+                
+                return;
+            }
 
             await command(_botClient, update, cancellationToken);
         }

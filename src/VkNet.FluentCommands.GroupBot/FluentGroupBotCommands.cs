@@ -9,6 +9,7 @@ using VkNet.Abstractions;
 using VkNet.Enums.SafetyEnums;
 using VkNet.Exception;
 using VkNet.Model;
+using VkNet.Model.Attachments;
 using VkNet.Model.GroupUpdate;
 using VkNet.Model.RequestParams;
 
@@ -46,6 +47,13 @@ namespace VkNet.FluentCommands.GroupBot
         /// </summary>
         private readonly ConcurrentDictionary<(string, RegexOptions), Func<IVkApi, GroupUpdate, CancellationToken, Task>>
             _textCommands = new ConcurrentDictionary<(string, RegexOptions), Func<IVkApi, GroupUpdate, CancellationToken, Task>>();
+        
+        
+        /// <summary>
+        ///     Sticker commands storage.
+        /// </summary>
+        private readonly ConcurrentDictionary<long, Func<IVkApi, GroupUpdate, CancellationToken, Task>>
+            _stickerCommands = new ConcurrentDictionary<long, Func<IVkApi, GroupUpdate, CancellationToken, Task>>();
 
         /// <summary>
         ///     Stores the message logic exception handler
@@ -112,6 +120,22 @@ namespace VkNet.FluentCommands.GroupBot
         }
 
         /// <inheritdoc />
+        public void OnSticker(long stickerId, Func<IVkApi, GroupUpdate, CancellationToken, Task> func)
+        {
+            if (stickerId <= 0)
+            {
+                throw new ArgumentOutOfRangeException(nameof(stickerId));
+            }
+
+            if (func == null)
+            {
+                throw new ArgumentNullException(nameof(func));
+            }
+
+            _stickerCommands.TryAdd(stickerId, func);
+        }
+
+        /// <inheritdoc />
         public void OnBotException(Func<IVkApi, GroupUpdate, System.Exception, CancellationToken, Task> botException)
         {
             _botException = botException ?? throw new ArgumentNullException(nameof(botException));
@@ -156,6 +180,7 @@ namespace VkNet.FluentCommands.GroupBot
                                     await OnTextMessage(update, cancellationToken);
                                     break;
                                 case MessageType.Sticker:
+                                    await OnStickerMessage(update, cancellationToken);
                                     break;
                                 case MessageType.None:
                                     break;
@@ -235,6 +260,31 @@ namespace VkNet.FluentCommands.GroupBot
             await command(_botClient, update, cancellationToken);
         }
 
+        /// <summary>
+        ///     This method has a sticker processing logic.
+        /// </summary>
+        /// <param name="update">Group updates</param>
+        /// <param name="cancellationToken">Propagates notification that operations should be canceled.</param>
+        private async Task OnStickerMessage(GroupUpdate update, CancellationToken cancellationToken)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+
+            var stickerId = update.MessageNew.Message.Attachments
+                .Where(x => x.Type == typeof(Sticker))
+                .Select(x => x.Instance.Id)
+                .FirstOrDefault();
+
+            var command = _stickerCommands
+                .AsParallel()
+                .Where(x => x.Key == stickerId)
+                .Select(x => x.Value)
+                .SingleOrDefault();
+
+            if (command == null) return;
+
+            await command(_botClient, update, cancellationToken);
+        }
+        
         /// <summary>
         ///     Get data for the connection
         /// </summary>

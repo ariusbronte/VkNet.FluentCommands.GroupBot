@@ -153,6 +153,7 @@ namespace VkNet.FluentCommands.GroupBot
                             switch (type)
                             {
                                 case MessageType.Message:
+                                    await OnTextMessage(update, cancellationToken);
                                     break;
                                 case MessageType.Sticker:
                                     break;
@@ -206,6 +207,32 @@ namespace VkNet.FluentCommands.GroupBot
             }
 
             return MessageType.None;
+        }
+
+        /// <summary>
+        ///     This method has the logic of processing a new message.
+        /// </summary>
+        /// <param name="update">Group updates</param>
+        /// <param name="cancellationToken">Propagates notification that operations should be canceled.</param>
+        private async Task OnTextMessage(GroupUpdate update, CancellationToken cancellationToken = default)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+
+            var command = _textCommands
+                .AsParallel()
+                .Where(x =>
+                {
+                    return Regex.IsMatch(update.MessageNew.Message.Text, x.Key.Item1, x.Key.Item2);
+                })
+                .Select(x => x.Value)
+                .SingleOrDefault();
+
+            if (command == null)
+            {
+                return;
+            }
+
+            await command(_botClient, update, cancellationToken);
         }
 
         /// <summary>

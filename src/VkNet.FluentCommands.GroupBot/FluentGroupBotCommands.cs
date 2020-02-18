@@ -289,7 +289,7 @@ namespace VkNet.FluentCommands.GroupBot
                     return !peerId.HasValue && Regex.IsMatch(message.Text, pattern, options);
                 })
                 .Select(x => x.Value)
-                .SingleOrDefault();
+                .FirstOrDefault();
 
             if (command == null)
             {

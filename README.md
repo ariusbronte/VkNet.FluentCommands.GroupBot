@@ -44,6 +44,7 @@ commands.OnText("^hello$", async (api, update, token) =>
 await commands.ReceiveMessageAsync();
 ```
 ``` C#
+commands.OnText((2_000_000_000, "^ping$", async (api, update, token) => {});
 commands.OnSticker(163, async (api, update, token) => {});
 ```
 ## Regular expression configuration

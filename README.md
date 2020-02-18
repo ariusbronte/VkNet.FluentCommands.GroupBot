@@ -31,12 +31,12 @@ await commands.InitBotAsync(new ApiAuthParams
     AccessToken = "very big group token"
 });
 
-commands.OnText("^hello$", async (api, update, token) =>
+commands.OnText("^ping$", async (api, update, token) =>
 {
     await api.Messages.SendAsync(new MessagesSendParams
     {
         PeerId = update.MessageNew.Message.PeerId,
-        Message = "hi!",
+        Message = "pong",
         RandomId = random.Next(int.MinValue, int.MaxValue)
     });
 });
@@ -49,7 +49,7 @@ commands.OnPhoto(async (api, update, token) => {});
 ```
 ## Regular expression configuration
 ``` C#
-commands.OnText(("^hello$", RegexOptions.IgnoreCase), async (api, update, token) => {});
+commands.OnText(("^ping$", RegexOptions.IgnoreCase), async (api, update, token) => {});
 ```
 ## Individual logic
 ``` C#

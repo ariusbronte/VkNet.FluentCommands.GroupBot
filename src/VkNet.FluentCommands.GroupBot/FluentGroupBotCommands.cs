@@ -54,8 +54,14 @@ namespace VkNet.FluentCommands.GroupBot
         private readonly ConcurrentDictionary<long, Func<IVkApi, GroupUpdate, CancellationToken, Task>>
             _stickerCommands = new ConcurrentDictionary<long, Func<IVkApi, GroupUpdate, CancellationToken, Task>>();
 
-        private Func<IVkApi, GroupUpdate, CancellationToken, Task> _onImageCommand;
+        /// <summary>
+        ///     Stores the photo logic handler
+        /// </summary>
+        private Func<IVkApi, GroupUpdate, CancellationToken, Task> _onPhotoCommand;
 
+        /// <summary>
+        ///     Stores the sticker logic handler
+        /// </summary>
         private Func<IVkApi, GroupUpdate, CancellationToken, Task> _onStickerCommand;
 
         /// <summary>
@@ -176,7 +182,7 @@ namespace VkNet.FluentCommands.GroupBot
         /// <inheritdoc />
         public void OnPhoto(Func<IVkApi, GroupUpdate, CancellationToken, Task> func)
         {
-            _onImageCommand = func ?? throw new ArgumentNullException(nameof(func));
+            _onPhotoCommand = func ?? throw new ArgumentNullException(nameof(func));
         }
 
         /// <inheritdoc />
@@ -227,9 +233,9 @@ namespace VkNet.FluentCommands.GroupBot
                                     await OnStickerMessage(update, cancellationToken);
                                     break;
                                 case MessageType.Image:
-                                    if (_onImageCommand != null)
+                                    if (_onPhotoCommand != null)
                                     {
-                                        await _onImageCommand(_botClient, update, cancellationToken);
+                                        await _onPhotoCommand(_botClient, update, cancellationToken);
                                     }
                                     break;
                                 case MessageType.None:

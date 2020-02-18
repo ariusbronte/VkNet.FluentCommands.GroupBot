@@ -207,7 +207,7 @@ namespace VkNet.FluentCommands.GroupBot
                     {
                         try
                         {
-                            if (update.Type != GroupUpdateType.MessageNew) break;
+                            if (update.Type != GroupUpdateType.MessageNew) continue;
 
                             var type = GetMessageType(update.MessageNew.Message);
                             switch (type)

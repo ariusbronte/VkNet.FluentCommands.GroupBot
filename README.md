@@ -43,7 +43,9 @@ commands.OnText("^hello$", async (api, update, token) =>
 
 await commands.ReceiveMessageAsync();
 ```
-
+``` C#
+commands.OnSticker(163, async (api, update, token) => {});
+```
 ## Regular expression configuration
 ``` C#
 commands.OnText(("^hello$", RegexOptions.IgnoreCase), async (api, update, token) => {});

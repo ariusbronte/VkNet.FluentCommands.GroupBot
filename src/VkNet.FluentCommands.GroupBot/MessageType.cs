@@ -21,8 +21,8 @@
         Sticker,
         
         /// <summary>
-        ///     Image message type.
+        ///     Photo message type.
         /// </summary>
-        Image,
+        Photo
     }
 }

@@ -47,7 +47,7 @@ namespace VkNet.FluentCommands.GroupBot
         /// </summary>
         private readonly ConcurrentDictionary<(long?, string, RegexOptions), Func<IVkApi, GroupUpdate, CancellationToken, Task>>
             _textCommands = new ConcurrentDictionary<(long?, string, RegexOptions), Func<IVkApi, GroupUpdate, CancellationToken, Task>>();
-        
+
         /// <summary>
         ///     Sticker commands storage.
         /// </summary>
@@ -55,15 +55,15 @@ namespace VkNet.FluentCommands.GroupBot
             _stickerCommands = new ConcurrentDictionary<long, Func<IVkApi, GroupUpdate, CancellationToken, Task>>();
 
         /// <summary>
-        ///     Stores the photo logic handler
-        /// </summary>
-        private Func<IVkApi, GroupUpdate, CancellationToken, Task> _onPhotoCommand;
-
-        /// <summary>
         ///     Stores the sticker logic handler
         /// </summary>
         private Func<IVkApi, GroupUpdate, CancellationToken, Task> _onStickerCommand;
 
+        /// <summary>
+        ///     Stores the photo logic handler
+        /// </summary>
+        private Func<IVkApi, GroupUpdate, CancellationToken, Task> _onPhotoCommand;
+        
         /// <summary>
         ///     Stores the message logic exception handler
         /// </summary>
@@ -232,7 +232,7 @@ namespace VkNet.FluentCommands.GroupBot
                                 case MessageType.Sticker:
                                     await OnStickerMessage(update, cancellationToken);
                                     break;
-                                case MessageType.Image:
+                                case MessageType.Photo:
                                     if (_onPhotoCommand != null)
                                     {
                                         await _onPhotoCommand(_botClient, update, cancellationToken);
@@ -289,7 +289,7 @@ namespace VkNet.FluentCommands.GroupBot
 
             if (message.Attachments.Any(x => x.Type == typeof(Photo)))
             {
-                return MessageType.Image;
+                return MessageType.Photo;
             }
 
             return MessageType.None;

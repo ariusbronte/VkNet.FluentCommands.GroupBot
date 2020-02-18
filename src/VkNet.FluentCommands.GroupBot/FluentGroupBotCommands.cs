@@ -147,20 +147,17 @@ namespace VkNet.FluentCommands.GroupBot
                     {
                         try
                         {
-                            if (update.Type == GroupUpdateType.MessageNew)
+                            if (update.Type != GroupUpdateType.MessageNew) break;
+
+                            var type = GetMessageType(update.MessageNew.Message);
+                            switch (type)
                             {
-                                var command = _textCommands
-                                    .Where(predicate: x => Regex.IsMatch(input: update.MessageNew.Message.Text,
-                                        pattern: x.Key.Item1, options: x.Key.Item2))
-                                    .Select(selector: x => x.Value)
-                                    .SingleOrDefault();
-
-                                if (command == null)
-                                {
-                                    continue;
-                                }
-
-                                await command(arg1: _botClient, arg2: update, arg3: cancellationToken);
+                                case MessageType.Message:
+                                    break;
+                                case MessageType.Sticker:
+                                    break;
+                                case MessageType.None:
+                                    break;
                             }
                         }
                         catch (System.Exception e)
@@ -189,6 +186,26 @@ namespace VkNet.FluentCommands.GroupBot
                     await (_exception?.Invoke(e, cancellationToken) ?? throw e);
                 }
             }
+        }
+        
+        /// <summary>
+        ///     This method returns the type of incoming message.
+        /// </summary>
+        /// <param name="message">Private message.</param>
+        /// <returns>The type of incoming message.</returns>
+        private static MessageType GetMessageType(Message message)
+        {
+            if (!string.IsNullOrWhiteSpace(message.Text))
+            {
+                return MessageType.Message;
+            }
+
+            if (message.Attachments.Any(x => x.Type == typeof(Sticker)))
+            {
+                return MessageType.Sticker;
+            }
+
+            return MessageType.None;
         }
 
         /// <summary>

@@ -31,12 +31,12 @@ await commands.InitBotAsync(new ApiAuthParams
     AccessToken = "very big group token"
 });
 
-commands.OnText("^hello$", async (api, update, token) =>
+commands.OnText("^ping$", async (api, update, token) =>
 {
     await api.Messages.SendAsync(new MessagesSendParams
     {
         PeerId = update.MessageNew.Message.PeerId,
-        Message = "hi!",
+        Message = "pong",
         RandomId = random.Next(int.MinValue, int.MaxValue)
     });
 });
@@ -44,14 +44,18 @@ commands.OnText("^hello$", async (api, update, token) =>
 await commands.ReceiveMessageAsync();
 ```
 ``` C#
-commands.OnText((2_000_000_000, "^ping$", async (api, update, token) => {});
+commands.OnSticker(async (api, update, token) => {});
 commands.OnSticker(163, async (api, update, token) => {});
+commands.OnPhoto(async (api, update, token) => {});
 ```
 ## Regular expression configuration
 ``` C#
-commands.OnText(("^hello$", RegexOptions.IgnoreCase), async (api, update, token) => {});
+commands.OnText(("^ping$", RegexOptions.IgnoreCase), async (api, update, token) => {});
 ```
-
+## Individual logic
+``` C#
+commands.OnText((2_000_000_000, "^ping$", RegexOptions.IgnoreCase), async (api, update, token) => {});
+```
 ## Bot exception handler
 ``` C#
 commands.OnBotException(async (api, update, e, token) => {});

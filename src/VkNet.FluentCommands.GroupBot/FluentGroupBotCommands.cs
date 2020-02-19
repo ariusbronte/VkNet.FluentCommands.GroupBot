@@ -371,7 +371,7 @@ namespace VkNet.FluentCommands.GroupBot
                 try
                 {
                     var longPollHistory = await GetBotsLongPollHistoryAsync(key, server, ts, cancellationToken);
-                    if (longPollHistory?.Updates == null) continue;
+                    if (!longPollHistory.Updates.Any()) continue;
 
                     foreach (var update in longPollHistory.Updates)
                     {
@@ -529,6 +529,11 @@ namespace VkNet.FluentCommands.GroupBot
         private async Task OnStickerMessage(GroupUpdate update, CancellationToken cancellationToken)
         {
             cancellationToken.ThrowIfCancellationRequested();
+
+            if (update == null)
+            {
+                throw new ArgumentNullException(nameof(update));
+            }
 
             var stickerId = update.MessageNew.Message.Attachments
                 .Where(x => x.Type == typeof(Sticker))

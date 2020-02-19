@@ -33,6 +33,7 @@ await commands.InitBotAsync(new ApiAuthParams
 
 commands.OnText("^ping$", "pong");
 commands.OnText("^hello$", new[] {"hi!", "hey!", "good day!"});
+
 await commands.ReceiveMessageAsync();
 ```
 ``` C#

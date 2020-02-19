@@ -34,7 +34,6 @@ namespace VkNet.FluentCommands.GroupBot
         /// <param name="pattern">Regular expression.</param>
         /// <param name="func">Trigger actions performed.</param>
         /// <exception cref="ArgumentException">Thrown if regular expression is null or whitespace.</exception>
-        /// <exception cref="InvalidEnumArgumentException">Thrown if regex options is not defined.</exception>
         /// <exception cref="ArgumentNullException">Thrown if trigger actions in null.</exception>
         void OnText(string pattern, Func<IVkApi, GroupUpdate, CancellationToken, Task> func);
 
@@ -53,9 +52,8 @@ namespace VkNet.FluentCommands.GroupBot
         /// </summary>
         /// <param name="tuple">Regular expression and Regex options.</param>
         /// <param name="func">Trigger actions performed.</param>
-        /// <exception cref="ArgumentOutOfRangeException">Thrown if sticker id is less than or equal to zero.</exception>
+        /// <exception cref="ArgumentOutOfRangeException">Thrown if peer id is less than or equal to zero.</exception>
         /// <exception cref="ArgumentException">Thrown if regular expression is null or whitespace.</exception>
-        /// <exception cref="InvalidEnumArgumentException">Thrown if regex options is not defined.</exception>
         /// <exception cref="ArgumentNullException">Thrown if trigger actions in null.</exception>
         void OnText((long peerId, string pattern) tuple, Func<IVkApi, GroupUpdate, CancellationToken, Task> func);
 
@@ -64,6 +62,7 @@ namespace VkNet.FluentCommands.GroupBot
         /// </summary>
         /// <param name="tuple">Regular expression and Regex options.</param>
         /// <param name="func">Trigger actions performed.</param>
+        /// <exception cref="ArgumentOutOfRangeException">Thrown if peer id is less than or equal to zero.</exception>
         /// <exception cref="ArgumentException">Thrown if regular expression is null or whitespace.</exception>
         /// <exception cref="InvalidEnumArgumentException">Thrown if regex options is not defined.</exception>
         /// <exception cref="ArgumentNullException">Thrown if trigger actions in null.</exception>
@@ -75,9 +74,7 @@ namespace VkNet.FluentCommands.GroupBot
         /// <param name="pattern">Regular expression.</param>
         /// <param name="answer">Short response to the received message.</param>
         /// <exception cref="ArgumentException">Thrown if regular expression is null or whitespace.</exception>
-        /// <exception cref="ArgumentException">Thrown if answer expression is null or whitespace.</exception>
-        /// <exception cref="InvalidEnumArgumentException">Thrown if regex options is not defined.</exception>
-        /// <exception cref="ArgumentNullException">Thrown if trigger actions in null.</exception>
+        /// <exception cref="ArgumentException">Thrown if answer is null or whitespace.</exception>
         void OnText(string pattern, string answer);
 
         /// <summary>
@@ -86,31 +83,29 @@ namespace VkNet.FluentCommands.GroupBot
         /// <param name="tuple">Regular expression and Regex options.</param>
         /// <param name="answer">Short response to the received message.</param>
         /// <exception cref="ArgumentException">Thrown if regular expression is null or whitespace.</exception>
-        /// <exception cref="ArgumentException">Thrown if answer expression is null or whitespace.</exception>
+        /// <exception cref="ArgumentException">Thrown if answer is null or whitespace.</exception>
         /// <exception cref="InvalidEnumArgumentException">Thrown if regex options is not defined.</exception>
-        /// <exception cref="ArgumentNullException">Thrown if trigger actions in null.</exception>
         void OnText((string pattern, RegexOptions options) tuple, string answer);
 
         /// <summary>
         ///     Trigger on a text command.
         /// </summary>
-        /// <param name="tuple">Regular expression and Regex options.</param>
+        /// <param name="tuple">Regular expression and individual conversation.</param>
         /// <param name="answer">Short response to the received message.</param>
+        /// <exception cref="ArgumentOutOfRangeException">Thrown if peer id is less than or equal to zero.</exception>
         /// <exception cref="ArgumentException">Thrown if regular expression is null or whitespace.</exception>
-        /// <exception cref="ArgumentException">Thrown if answer expression is null or whitespace.</exception>
-        /// <exception cref="InvalidEnumArgumentException">Thrown if regex options is not defined.</exception>
-        /// <exception cref="ArgumentNullException">Thrown if trigger actions in null.</exception>
+        /// <exception cref="ArgumentException">Thrown if answer is null or whitespace.</exception>
         void OnText((long peerId, string pattern) tuple, string answer);
 
         /// <summary>
         ///     Trigger on a text command.
         /// </summary>
-        /// <param name="tuple">Regular expression and Regex options.</param>
+        /// <param name="tuple">Regular expression, regex options and individual conversation.</param>
         /// <param name="answer">Short response to the received message.</param>
+        /// <exception cref="ArgumentOutOfRangeException">Thrown if peer id is less than or equal to zero.</exception>
         /// <exception cref="ArgumentException">Thrown if regular expression is null or whitespace.</exception>
-        /// <exception cref="ArgumentException">Thrown if answer expression is null or whitespace.</exception>
+        /// <exception cref="ArgumentException">Thrown if answer is null or whitespace.</exception>
         /// <exception cref="InvalidEnumArgumentException">Thrown if regex options is not defined.</exception>
-        /// <exception cref="ArgumentNullException">Thrown if trigger actions in null.</exception>
         void OnText((long peerId, string pattern, RegexOptions options) tuple, string answer);
 
         /// <summary>
@@ -119,10 +114,7 @@ namespace VkNet.FluentCommands.GroupBot
         /// <param name="pattern">Regular expression.</param>
         /// <param name="answers">Random short response to the received message.</param>
         /// <exception cref="ArgumentException">Thrown if regular expression is null or whitespace.</exception>
-        /// <exception cref="ArgumentException">Thrown if answer expression is null or whitespace.</exception>
-        /// <exception cref="ArgumentOutOfRangeException">Thrown if sticker id is less than or equal to zero.</exception>
-        /// <exception cref="InvalidEnumArgumentException">Thrown if regex options is not defined.</exception>
-        /// <exception cref="ArgumentNullException">Thrown if trigger actions in null.</exception>
+        /// <exception cref="ArgumentException">Thrown if the answers is empty.</exception>
         void OnText(string pattern, params string[] answers);
 
         /// <summary>
@@ -131,41 +123,37 @@ namespace VkNet.FluentCommands.GroupBot
         /// <param name="tuple">Regular expression and Regex options.</param>
         /// <param name="answers">Random short response to the received message.</param>
         /// <exception cref="ArgumentException">Thrown if regular expression is null or whitespace.</exception>
-        /// <exception cref="ArgumentException">Thrown if answer expression is null or whitespace.</exception>
-        /// <exception cref="ArgumentOutOfRangeException">Thrown if sticker id is less than or equal to zero.</exception>
         /// <exception cref="InvalidEnumArgumentException">Thrown if regex options is not defined.</exception>
-        /// <exception cref="ArgumentNullException">Thrown if trigger actions in null.</exception>
+        /// <exception cref="ArgumentException">Thrown if the answers is empty.</exception>
         void OnText((string pattern, RegexOptions options) tuple, params string[] answers);
 
         /// <summary>
         ///     Trigger on a text command.
         /// </summary>
-        /// <param name="tuple">Regular expression and Regex options.</param>
+        /// <param name="tuple">Regular expression and individual conversation.</param>
         /// <param name="answers">Random short response to the received message.</param>
+        /// <exception cref="ArgumentOutOfRangeException">Thrown if peer id is less than or equal to zero.</exception>
         /// <exception cref="ArgumentException">Thrown if regular expression is null or whitespace.</exception>
-        /// <exception cref="ArgumentException">Thrown if answer expression is null or whitespace.</exception>
-        /// <exception cref="ArgumentOutOfRangeException">Thrown if sticker id is less than or equal to zero.</exception>
-        /// <exception cref="InvalidEnumArgumentException">Thrown if regex options is not defined.</exception>
-        /// <exception cref="ArgumentNullException">Thrown if trigger actions in null.</exception>
+        /// <exception cref="ArgumentException">Thrown if the answers is empty.</exception>
         void OnText((long peerId, string pattern) tuple, params string[] answers);
 
         /// <summary>
         ///     Trigger on a text command.
         /// </summary>
-        /// <param name="tuple">Regular expression and Regex options.</param>
+        /// <param name="tuple">Regular expression, regex options and individual conversation.</param>
         /// <param name="answers">Random short response to the received message.</param>
+        /// <exception cref="ArgumentOutOfRangeException">Thrown if peer id is less than or equal to zero.</exception>
         /// <exception cref="ArgumentException">Thrown if regular expression is null or whitespace.</exception>
-        /// <exception cref="ArgumentException">Thrown if answer expression is null or whitespace.</exception>
-        /// <exception cref="ArgumentOutOfRangeException">Thrown if sticker id is less than or equal to zero.</exception>
         /// <exception cref="InvalidEnumArgumentException">Thrown if regex options is not defined.</exception>
-        /// <exception cref="ArgumentNullException">Thrown if trigger actions in null.</exception>
+        /// <exception cref="ArgumentException">Thrown if the answers is empty.</exception>
         void OnText((long peerId, string pattern, RegexOptions options) tuple, params string[] answers);
         
         /// <summary>
-        ///     Trigger on a photo command.
+        ///     Trigger on a sticker command.
         /// </summary>
         /// <param name="func">Trigger actions performed.</param>
-        void OnPhoto(Func<IVkApi, GroupUpdate, CancellationToken, Task> func);
+        /// <exception cref="ArgumentNullException">Thrown if trigger actions in null.</exception>
+        void OnSticker(Func<IVkApi, GroupUpdate, CancellationToken, Task> func);
         
         /// <summary>
         ///     Trigger on a sticker command.
@@ -175,13 +163,12 @@ namespace VkNet.FluentCommands.GroupBot
         /// <exception cref="ArgumentOutOfRangeException">Thrown if sticker id is less than or equal to zero.</exception>
         /// <exception cref="ArgumentNullException">Thrown if trigger actions in null.</exception>
         void OnSticker(long stickerId, Func<IVkApi, GroupUpdate, CancellationToken, Task> func);
-        
+
         /// <summary>
-        ///     Trigger on a sticker command.
+        ///     Trigger on a photo command.
         /// </summary>
         /// <param name="func">Trigger actions performed.</param>
-        /// <exception cref="ArgumentNullException">Thrown if trigger actions in null.</exception>
-        void OnSticker(Func<IVkApi, GroupUpdate, CancellationToken, Task> func);
+        void OnPhoto(Func<IVkApi, GroupUpdate, CancellationToken, Task> func);
 
         /// <summary>
         ///     Trigger on a voice command.

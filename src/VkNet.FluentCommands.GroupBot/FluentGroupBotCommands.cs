@@ -54,15 +54,15 @@ namespace VkNet.FluentCommands.GroupBot
             _textCommands = new ConcurrentDictionary<(long?, string, RegexOptions), Func<IVkApi, GroupUpdate, CancellationToken, Task>>();
 
         /// <summary>
+        ///     Stores the sticker logic handler
+        /// </summary>
+        private Func<IVkApi, GroupUpdate, CancellationToken, Task> _onStickerCommand;
+        
+        /// <summary>
         ///     Sticker commands storage.
         /// </summary>
         private readonly ConcurrentDictionary<long, Func<IVkApi, GroupUpdate, CancellationToken, Task>>
             _stickerCommands = new ConcurrentDictionary<long, Func<IVkApi, GroupUpdate, CancellationToken, Task>>();
-
-        /// <summary>
-        ///     Stores the sticker logic handler
-        /// </summary>
-        private Func<IVkApi, GroupUpdate, CancellationToken, Task> _onStickerCommand;
 
         /// <summary>
         ///     Stores the photo logic handler
@@ -113,7 +113,7 @@ namespace VkNet.FluentCommands.GroupBot
         /// <inheritdoc />
         public void OnText(string pattern, Func<IVkApi, GroupUpdate, CancellationToken, Task> func)
         {
-            OnText(tuple: (pattern, RegexOptions.None), func: func);
+            OnTextHandler(tuple: (null, pattern, RegexOptions.None), func: func);
         }
         
         /// <inheritdoc />
@@ -126,6 +126,17 @@ namespace VkNet.FluentCommands.GroupBot
         public void OnText((long peerId, string pattern) tuple, Func<IVkApi, GroupUpdate, CancellationToken, Task> func)
         {
             OnText(tuple: (tuple.peerId, tuple.pattern, RegexOptions.None), func: func);
+        }
+        
+        /// <inheritdoc />
+        public void OnText((long peerId, string pattern, RegexOptions options) tuple, Func<IVkApi, GroupUpdate, CancellationToken, Task> func)
+        {
+            if (tuple.peerId <= 0)
+            {
+                throw new ArgumentOutOfRangeException(nameof(tuple.peerId));
+            }
+            
+            OnTextHandler(tuple: tuple, func: func);
         }
 
         /// <inheritdoc />
@@ -146,8 +157,14 @@ namespace VkNet.FluentCommands.GroupBot
             OnText((tuple.peerId, tuple.pattern, RegexOptions.None), answer);
         }
 
+        /// <inheritdoc />
         public void OnText((long peerId, string pattern, RegexOptions options) tuple, string answer)
         { 
+            if (tuple.peerId <= 0)
+            {
+                throw new ArgumentOutOfRangeException(nameof(tuple.peerId));
+            }
+            
             OnTextHandler(tuple, answer);
         }
 
@@ -179,20 +196,9 @@ namespace VkNet.FluentCommands.GroupBot
 
             OnTextHandler(tuple, answers[_random.Next(0, answers.Length)]);
         }
-        
-        /// <inheritdoc />
-        public void OnText((long peerId, string pattern, RegexOptions options) tuple, Func<IVkApi, GroupUpdate, CancellationToken, Task> func)
-        {
-            if (tuple.peerId <= 0)
-            {
-                throw new ArgumentOutOfRangeException(nameof(tuple.peerId));
-            }
-            
-            OnTextHandler(tuple: tuple, func: func);
-        }
-        
+
         /// <summary>
-        ///     The main handler for all incoming message triggers
+        ///     The main handler for all incoming text message triggers
         /// </summary>
         /// <param name="tuple">Regular expression and Regex options.</param>
         /// <param name="func">Trigger actions performed.</param>
@@ -216,7 +222,7 @@ namespace VkNet.FluentCommands.GroupBot
                 throw new ArgumentNullException(paramName: nameof(func));
             }
 
-            _textCommands.TryAdd(key: (tuple.peerId, tuple.pattern, tuple.options), value: func);
+            _textCommands.TryAdd(key: tuple, value: func);
         }
         
         /// <summary>
@@ -227,7 +233,6 @@ namespace VkNet.FluentCommands.GroupBot
         /// <exception cref="ArgumentException">Thrown if regular expression is null or whitespace.</exception>
         /// <exception cref="ArgumentException">Thrown if answer expression is null or whitespace.</exception>
         /// <exception cref="InvalidEnumArgumentException">Thrown if regex options is not defined.</exception>
-        /// <exception cref="ArgumentNullException">Thrown if trigger actions in null.</exception>
         private void OnTextHandler((long? peerId, string pattern, RegexOptions options) tuple, string answer)
         {
             if (string.IsNullOrWhiteSpace(answer))
@@ -238,9 +243,14 @@ namespace VkNet.FluentCommands.GroupBot
             OnTextHandler(tuple, async (api, update, token) =>
             {
                 token.ThrowIfCancellationRequested();
-                var message = update.MessageNew.Message;
-                await SendAsync(message.PeerId, answer);
+                await SendAsync(update.MessageNew.Message.PeerId, answer);
             });
+        }
+        
+        /// <inheritdoc />
+        public void OnSticker(Func<IVkApi, GroupUpdate, CancellationToken, Task> func)
+        {
+            _onStickerCommand = func ?? throw new ArgumentNullException(nameof(func));
         }
 
         /// <inheritdoc />
@@ -259,12 +269,6 @@ namespace VkNet.FluentCommands.GroupBot
             _stickerCommands.TryAdd(stickerId, func);
         }
 
-        /// <inheritdoc />
-        public void OnSticker(Func<IVkApi, GroupUpdate, CancellationToken, Task> func)
-        {
-            _onStickerCommand = func ?? throw new ArgumentNullException(nameof(func));
-        }
-        
         /// <inheritdoc />
         public void OnPhoto(Func<IVkApi, GroupUpdate, CancellationToken, Task> func)
         {
@@ -307,6 +311,7 @@ namespace VkNet.FluentCommands.GroupBot
                     if (longPollHistory?.Updates == null) continue;
 
                     foreach (var update in longPollHistory.Updates)
+                    {
                         try
                         {
                             if (update.Type != GroupUpdateType.MessageNew) continue;
@@ -322,17 +327,11 @@ namespace VkNet.FluentCommands.GroupBot
                                     break;
                                 case MessageType.Photo:
                                     if (_onPhotoCommand != null)
-                                    {
                                         await _onPhotoCommand(_botClient, update, cancellationToken);
-                                    }
-
                                     break;
                                 case MessageType.Voice:
                                     if (_onVoiceCommand != null)
-                                    {
                                         await _onVoiceCommand(_botClient, update, cancellationToken);
-                                    }
-
                                     break;
                                 case MessageType.None:
                                     break;
@@ -342,6 +341,7 @@ namespace VkNet.FluentCommands.GroupBot
                         {
                             await (_botException?.Invoke(_botClient, update, e, cancellationToken) ?? throw e);
                         }
+                    }
 
                     ts = longPollHistory.Ts;
                 }
@@ -353,10 +353,8 @@ namespace VkNet.FluentCommands.GroupBot
                     ts = longPollServer.Ts;
                     key = longPollServer.Key;
 
-                    if (_exception != null)
-                    {
+                    if (_exception != null) 
                         await _exception.Invoke(e, cancellationToken);
-                    }
                 }
                 catch (System.Exception e)
                 {
@@ -455,9 +453,7 @@ namespace VkNet.FluentCommands.GroupBot
             if (command == null)
             {
                 if (_onStickerCommand != null)
-                {
                     await _onStickerCommand(_botClient, update, cancellationToken);
-                }
                 
                 return;
             }

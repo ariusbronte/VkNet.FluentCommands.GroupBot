@@ -23,6 +23,11 @@
         /// <summary>
         ///     Photo message type.
         /// </summary>
-        Photo
+        Photo,
+        
+        /// <summary>
+        ///     Voice message type.
+        /// </summary>
+        Voice
     }
 }

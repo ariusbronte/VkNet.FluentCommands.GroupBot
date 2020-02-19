@@ -93,6 +93,13 @@ namespace VkNet.FluentCommands.GroupBot
         void OnSticker(Func<IVkApi, GroupUpdate, CancellationToken, Task> func);
 
         /// <summary>
+        ///     Trigger on a voice command.
+        /// </summary>
+        /// <param name="func">Trigger actions performed.</param>
+        /// <exception cref="ArgumentNullException">Thrown if trigger actions in null.</exception>
+        void OnVoice(Func<IVkApi, GroupUpdate, CancellationToken, Task> func);
+        
+        /// <summary>
         ///     The trigger for the exception handling logic of the message.
         /// </summary>
         /// <param name="botException">Trigger actions performed.</param>

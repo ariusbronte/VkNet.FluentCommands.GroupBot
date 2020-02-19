@@ -63,6 +63,11 @@ namespace VkNet.FluentCommands.GroupBot
         ///     Stores the photo logic handler
         /// </summary>
         private Func<IVkApi, GroupUpdate, CancellationToken, Task> _onPhotoCommand;
+
+        /// <summary>
+        ///     Stores the voice logic handler
+        /// </summary>
+        private Func<IVkApi, GroupUpdate, CancellationToken, Task> _onVoiceCommand;
         
         /// <summary>
         ///     Stores the message logic exception handler
@@ -73,7 +78,7 @@ namespace VkNet.FluentCommands.GroupBot
         ///     Stores the library exception handler.
         /// </summary>
         private Func<System.Exception, CancellationToken, Task> _exception;
-
+        
         /// <summary>
         ///      Initializes a new instance of the <see cref="FluentGroupBotCommands{TBotClient}"/> class.
         /// </summary>
@@ -128,7 +133,7 @@ namespace VkNet.FluentCommands.GroupBot
             
             OnTextHandler(tuple: tuple, func: func);
         }
-
+        
         /// <summary>
         ///     The main handler for all incoming message triggers
         /// </summary>
@@ -184,6 +189,12 @@ namespace VkNet.FluentCommands.GroupBot
         {
             _onPhotoCommand = func ?? throw new ArgumentNullException(nameof(func));
         }
+        
+        /// <inheritdoc />
+        public void OnVoice(Func<IVkApi, GroupUpdate, CancellationToken, Task> func)
+        {
+            _onVoiceCommand = func ?? throw new ArgumentNullException(nameof(func));
+        }
 
         /// <inheritdoc />
         public void OnBotException(Func<IVkApi, GroupUpdate, System.Exception, CancellationToken, Task> botException)
@@ -201,7 +212,7 @@ namespace VkNet.FluentCommands.GroupBot
         public async Task ReceiveMessageAsync(CancellationToken cancellationToken = default)
         {
             cancellationToken.ThrowIfCancellationRequested();
-            var longPollServer = await GetLongPollServerAsync(cancellationToken: cancellationToken);
+            var longPollServer = await GetLongPollServerAsync(cancellationToken);
 
             var server = longPollServer.Server;
             var ts = longPollServer.Ts;
@@ -211,14 +222,10 @@ namespace VkNet.FluentCommands.GroupBot
             {
                 try
                 {
-                    var longPollHistory = await GetBotsLongPollHistoryAsync(key: key, server: server, ts: ts, cancellationToken: cancellationToken);
-                    if (longPollHistory?.Updates == null)
-                    {
-                        continue;
-                    }
+                    var longPollHistory = await GetBotsLongPollHistoryAsync(key, server, ts, cancellationToken);
+                    if (longPollHistory?.Updates == null) continue;
 
                     foreach (var update in longPollHistory.Updates)
-                    {
                         try
                         {
                             if (update.Type != GroupUpdateType.MessageNew) continue;
@@ -237,6 +244,14 @@ namespace VkNet.FluentCommands.GroupBot
                                     {
                                         await _onPhotoCommand(_botClient, update, cancellationToken);
                                     }
+
+                                    break;
+                                case MessageType.Voice:
+                                    if (_onVoiceCommand != null)
+                                    {
+                                        await _onVoiceCommand(_botClient, update, cancellationToken);
+                                    }
+
                                     break;
                                 case MessageType.None:
                                     break;
@@ -246,13 +261,12 @@ namespace VkNet.FluentCommands.GroupBot
                         {
                             await (_botException?.Invoke(_botClient, update, e, cancellationToken) ?? throw e);
                         }
-                    }
 
                     ts = longPollHistory.Ts;
                 }
                 catch (LongPollKeyExpiredException e)
                 {
-                    longPollServer = await GetLongPollServerAsync(cancellationToken: cancellationToken);
+                    longPollServer = await GetLongPollServerAsync(cancellationToken);
 
                     server = longPollServer.Server;
                     ts = longPollServer.Ts;
@@ -292,6 +306,11 @@ namespace VkNet.FluentCommands.GroupBot
                 return MessageType.Photo;
             }
 
+            if (message.Attachments.Any(x => x.Type == typeof(AudioMessage)))
+            {
+                return MessageType.Voice;
+            }
+            
             return MessageType.None;
         }
 

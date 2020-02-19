@@ -38,9 +38,10 @@ await commands.ReceiveMessageAsync();
 ```
 ``` C#
 commands.OnSticker(async (api, update, token) => {});
-commands.OnSticker(163, async (api, update, token) => {});
 commands.OnPhoto(async (api, update, token) => {});
 commands.OnVoice(async (api, update, token) => {});
+commands.OnSticker(163, async (api, update, token) => {});
+commands.OnReply("^ping$", async (api, update, token) => {});
 ```
 ## Extended logic
 ``` C# 

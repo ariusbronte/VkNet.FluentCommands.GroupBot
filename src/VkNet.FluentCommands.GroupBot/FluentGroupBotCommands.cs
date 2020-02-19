@@ -406,6 +406,7 @@ namespace VkNet.FluentCommands.GroupBot
             
             var command = _textCommands
                 .AsParallel()
+                .AsOrdered()
                 .Where(x =>
                 {
                     var peerId = x.Key.Item1;

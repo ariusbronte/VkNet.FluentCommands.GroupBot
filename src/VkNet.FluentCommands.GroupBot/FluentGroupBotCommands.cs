@@ -52,6 +52,12 @@ namespace VkNet.FluentCommands.GroupBot
         /// </summary>
         private readonly ConcurrentDictionary<(long?, string, RegexOptions), Func<IVkApi, GroupUpdate, CancellationToken, Task>>
             _textCommands = new ConcurrentDictionary<(long?, string, RegexOptions), Func<IVkApi, GroupUpdate, CancellationToken, Task>>();
+        
+        /// <summary>
+        ///     Reply commands storage.
+        /// </summary>
+        private readonly ConcurrentDictionary<(long?, string, RegexOptions), Func<IVkApi, GroupUpdate, CancellationToken, Task>>
+            _replyCommands = new ConcurrentDictionary<(long?, string, RegexOptions), Func<IVkApi, GroupUpdate, CancellationToken, Task>>();
 
         /// <summary>
         ///     Stores the sticker logic handler
@@ -197,6 +203,35 @@ namespace VkNet.FluentCommands.GroupBot
             OnTextHandler(tuple, answers[_random.Next(0, answers.Length)]);
         }
 
+        /// <inheritdoc />
+        public void OnReply(string pattern, Func<IVkApi, GroupUpdate, CancellationToken, Task> func)
+        {
+            OnReplyHandler(tuple: (null, pattern, RegexOptions.None), func: func);
+        }
+        
+        /// <inheritdoc />
+        public void OnReply((string pattern, RegexOptions options) tuple, Func<IVkApi, GroupUpdate, CancellationToken, Task> func)
+        {
+            OnReplyHandler(tuple: (null, tuple.pattern, tuple.options), func: func);
+        }
+        
+        /// <inheritdoc />
+        public void OnReply((long peerId, string pattern) tuple, Func<IVkApi, GroupUpdate, CancellationToken, Task> func)
+        {
+            OnReply(tuple: (tuple.peerId, tuple.pattern, RegexOptions.None), func: func);
+        }
+        
+        /// <inheritdoc />
+        public void OnReply((long peerId, string pattern, RegexOptions options) tuple, Func<IVkApi, GroupUpdate, CancellationToken, Task> func)
+        {
+            if (tuple.peerId <= 0)
+            {
+                throw new ArgumentOutOfRangeException(nameof(tuple.peerId));
+            }
+            
+            OnReplyHandler(tuple: tuple, func: func);
+        }
+
         /// <summary>
         ///     The main handler for all incoming text message triggers
         /// </summary>
@@ -245,6 +280,34 @@ namespace VkNet.FluentCommands.GroupBot
                 token.ThrowIfCancellationRequested();
                 await SendAsync(update.MessageNew.Message.PeerId, answer);
             });
+        }
+        
+        /// <summary>
+        ///     
+        /// </summary>
+        /// <param name="tuple">Regular expression and Regex options.</param>
+        /// <param name="func">Trigger actions performed.</param>
+        /// <exception cref="ArgumentException">Thrown if regular expression is null or whitespace.</exception>
+        /// <exception cref="InvalidEnumArgumentException">Thrown if regex options is not defined.</exception>
+        /// <exception cref="ArgumentNullException">Thrown if trigger actions in null.</exception>
+        private void OnReplyHandler((long? peerId, string pattern, RegexOptions options) tuple, Func<IVkApi, GroupUpdate, CancellationToken, Task> func)
+        {
+            if (string.IsNullOrWhiteSpace(value: tuple.pattern))
+            {
+                throw new ArgumentException(message: "Value cannot be null or whitespace.", paramName: nameof(tuple.pattern));
+            }
+
+            if (!Enum.IsDefined(enumType: typeof(RegexOptions), value: tuple.options))
+            {
+                throw new InvalidEnumArgumentException(argumentName: nameof(tuple.options), invalidValue: (int) tuple.options, enumClass: typeof(RegexOptions));
+            }
+
+            if (func == null)
+            {
+                throw new ArgumentNullException(paramName: nameof(func));
+            }
+
+            _replyCommands.TryAdd(key: tuple, value: func);
         }
         
         /// <inheritdoc />
@@ -320,7 +383,10 @@ namespace VkNet.FluentCommands.GroupBot
                             switch (type)
                             {
                                 case MessageType.Message:
-                                    await OnTextMessage(update, cancellationToken);
+                                    await OnTextMessage(_textCommands, update, cancellationToken);
+                                    break;
+                                case MessageType.Reply:
+                                    await OnTextMessage(_replyCommands, update, cancellationToken);
                                     break;
                                 case MessageType.Sticker:
                                     await OnStickerMessage(update, cancellationToken);
@@ -367,9 +433,20 @@ namespace VkNet.FluentCommands.GroupBot
         ///     This method returns the type of incoming message.
         /// </summary>
         /// <param name="message">Private message.</param>
+        /// <param name=""></param>
         /// <returns>The type of incoming message.</returns>
         private static MessageType GetMessageType(Message message)
         {
+            if (message == null)
+            {
+                throw new ArgumentNullException(nameof(message));
+            }
+            
+            if (!string.IsNullOrWhiteSpace(message.ReplyMessage?.Text))
+            {
+                return MessageType.Reply;
+            }
+            
             if (!string.IsNullOrWhiteSpace(message.Text))
             {
                 return MessageType.Message;
@@ -396,13 +473,27 @@ namespace VkNet.FluentCommands.GroupBot
         /// <summary>
         ///     This method has the logic of processing a new message.
         /// </summary>
-        /// <param name="update">Group updates</param>
+        /// <param name="commands">Commands storage.</param>
+        /// <param name="update">Group updates.</param>
         /// <param name="cancellationToken">Propagates notification that operations should be canceled.</param>
-        private async Task OnTextMessage(GroupUpdate update, CancellationToken cancellationToken = default)
+        private async Task OnTextMessage(
+            ConcurrentDictionary<(long?, string, RegexOptions), Func<IVkApi, GroupUpdate, CancellationToken, Task>> commands,
+            GroupUpdate update,
+            CancellationToken cancellationToken = default)
         {
             cancellationToken.ThrowIfCancellationRequested();
-            
-            var command = _textCommands
+
+            if (commands.IsEmpty)
+            {
+                throw new ArgumentNullException(nameof(commands));
+            }
+
+            if (update == null)
+            {
+                throw new ArgumentNullException(nameof(update));
+            }
+
+            var command = commands
                 .AsParallel()
                 .AsOrdered()
                 .Where(x =>
@@ -416,7 +507,7 @@ namespace VkNet.FluentCommands.GroupBot
                     {
                         return Regex.IsMatch(message.Text, pattern, options);
                     }
-                    
+
                     return !peerId.HasValue && Regex.IsMatch(message.Text, pattern, options);
                 })
                 .Select(x => x.Value)
@@ -429,7 +520,7 @@ namespace VkNet.FluentCommands.GroupBot
 
             await command(_botClient, update, cancellationToken);
         }
-
+        
         /// <summary>
         ///     This method has a sticker processing logic.
         /// </summary>

@@ -16,6 +16,11 @@
         Message,
         
         /// <summary>
+        ///     Reply message type.
+        /// </summary>
+        Reply,
+        
+        /// <summary>
         ///     Sticker message type.
         /// </summary>
         Sticker,

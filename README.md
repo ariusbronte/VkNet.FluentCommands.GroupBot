@@ -31,22 +31,27 @@ await commands.InitBotAsync(new ApiAuthParams
     AccessToken = "very big group token"
 });
 
-commands.OnText("^ping$", async (api, update, token) =>
-{
-    await api.Messages.SendAsync(new MessagesSendParams
-    {
-        PeerId = update.MessageNew.Message.PeerId,
-        Message = "pong",
-        RandomId = random.Next(int.MinValue, int.MaxValue)
-    });
-});
-
+commands.OnText("^ping$", "pong");
+commands.OnText("^hello$", new[] {"hi!", "hey!", "good day!"});
 await commands.ReceiveMessageAsync();
 ```
 ``` C#
 commands.OnSticker(async (api, update, token) => {});
 commands.OnSticker(163, async (api, update, token) => {});
 commands.OnPhoto(async (api, update, token) => {});
+commands.OnVoice(async (api, update, token) => {});
+```
+## Extended logic
+``` C# 
+commands.OnText("^ping$", async (api, message, token) =>
+{
+    await api.Messages.SendAsync(new MessagesSendParams
+    {
+        PeerId = message.PeerId,
+        Message = "pong",
+        RandomId = random.Next(int.MinValue, int.MaxValue)
+    });
+});
 ```
 ## Regular expression configuration
 ``` C#

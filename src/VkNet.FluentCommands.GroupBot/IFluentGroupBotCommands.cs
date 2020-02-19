@@ -64,12 +64,103 @@ namespace VkNet.FluentCommands.GroupBot
         /// </summary>
         /// <param name="tuple">Regular expression and Regex options.</param>
         /// <param name="func">Trigger actions performed.</param>
-        /// <exception cref="ArgumentOutOfRangeException">Thrown if sticker id is less than or equal to zero.</exception>
         /// <exception cref="ArgumentException">Thrown if regular expression is null or whitespace.</exception>
         /// <exception cref="InvalidEnumArgumentException">Thrown if regex options is not defined.</exception>
         /// <exception cref="ArgumentNullException">Thrown if trigger actions in null.</exception>
         void OnText((long peerId, string pattern, RegexOptions options) tuple, Func<IVkApi, GroupUpdate, CancellationToken, Task> func);
 
+        /// <summary>
+        ///     Trigger on a text command.
+        /// </summary>
+        /// <param name="pattern">Regular expression.</param>
+        /// <param name="answer">Short response to the received message.</param>
+        /// <exception cref="ArgumentException">Thrown if regular expression is null or whitespace.</exception>
+        /// <exception cref="ArgumentException">Thrown if answer expression is null or whitespace.</exception>
+        /// <exception cref="InvalidEnumArgumentException">Thrown if regex options is not defined.</exception>
+        /// <exception cref="ArgumentNullException">Thrown if trigger actions in null.</exception>
+        void OnText(string pattern, string answer);
+
+        /// <summary>
+        ///     Trigger on a text command.
+        /// </summary>
+        /// <param name="tuple">Regular expression and Regex options.</param>
+        /// <param name="answer">Short response to the received message.</param>
+        /// <exception cref="ArgumentException">Thrown if regular expression is null or whitespace.</exception>
+        /// <exception cref="ArgumentException">Thrown if answer expression is null or whitespace.</exception>
+        /// <exception cref="InvalidEnumArgumentException">Thrown if regex options is not defined.</exception>
+        /// <exception cref="ArgumentNullException">Thrown if trigger actions in null.</exception>
+        void OnText((string pattern, RegexOptions options) tuple, string answer);
+
+        /// <summary>
+        ///     Trigger on a text command.
+        /// </summary>
+        /// <param name="tuple">Regular expression and Regex options.</param>
+        /// <param name="answer">Short response to the received message.</param>
+        /// <exception cref="ArgumentException">Thrown if regular expression is null or whitespace.</exception>
+        /// <exception cref="ArgumentException">Thrown if answer expression is null or whitespace.</exception>
+        /// <exception cref="InvalidEnumArgumentException">Thrown if regex options is not defined.</exception>
+        /// <exception cref="ArgumentNullException">Thrown if trigger actions in null.</exception>
+        void OnText((long peerId, string pattern) tuple, string answer);
+
+        /// <summary>
+        ///     Trigger on a text command.
+        /// </summary>
+        /// <param name="tuple">Regular expression and Regex options.</param>
+        /// <param name="answer">Short response to the received message.</param>
+        /// <exception cref="ArgumentException">Thrown if regular expression is null or whitespace.</exception>
+        /// <exception cref="ArgumentException">Thrown if answer expression is null or whitespace.</exception>
+        /// <exception cref="InvalidEnumArgumentException">Thrown if regex options is not defined.</exception>
+        /// <exception cref="ArgumentNullException">Thrown if trigger actions in null.</exception>
+        void OnText((long peerId, string pattern, RegexOptions options) tuple, string answer);
+
+        /// <summary>
+        ///     Trigger on a text command.
+        /// </summary>
+        /// <param name="pattern">Regular expression.</param>
+        /// <param name="answers">Random short response to the received message.</param>
+        /// <exception cref="ArgumentException">Thrown if regular expression is null or whitespace.</exception>
+        /// <exception cref="ArgumentException">Thrown if answer expression is null or whitespace.</exception>
+        /// <exception cref="ArgumentOutOfRangeException">Thrown if sticker id is less than or equal to zero.</exception>
+        /// <exception cref="InvalidEnumArgumentException">Thrown if regex options is not defined.</exception>
+        /// <exception cref="ArgumentNullException">Thrown if trigger actions in null.</exception>
+        void OnText(string pattern, params string[] answers);
+
+        /// <summary>
+        ///     Trigger on a text command.
+        /// </summary>
+        /// <param name="tuple">Regular expression and Regex options.</param>
+        /// <param name="answers">Random short response to the received message.</param>
+        /// <exception cref="ArgumentException">Thrown if regular expression is null or whitespace.</exception>
+        /// <exception cref="ArgumentException">Thrown if answer expression is null or whitespace.</exception>
+        /// <exception cref="ArgumentOutOfRangeException">Thrown if sticker id is less than or equal to zero.</exception>
+        /// <exception cref="InvalidEnumArgumentException">Thrown if regex options is not defined.</exception>
+        /// <exception cref="ArgumentNullException">Thrown if trigger actions in null.</exception>
+        void OnText((string pattern, RegexOptions options) tuple, params string[] answers);
+
+        /// <summary>
+        ///     Trigger on a text command.
+        /// </summary>
+        /// <param name="tuple">Regular expression and Regex options.</param>
+        /// <param name="answers">Random short response to the received message.</param>
+        /// <exception cref="ArgumentException">Thrown if regular expression is null or whitespace.</exception>
+        /// <exception cref="ArgumentException">Thrown if answer expression is null or whitespace.</exception>
+        /// <exception cref="ArgumentOutOfRangeException">Thrown if sticker id is less than or equal to zero.</exception>
+        /// <exception cref="InvalidEnumArgumentException">Thrown if regex options is not defined.</exception>
+        /// <exception cref="ArgumentNullException">Thrown if trigger actions in null.</exception>
+        void OnText((long peerId, string pattern) tuple, params string[] answers);
+
+        /// <summary>
+        ///     Trigger on a text command.
+        /// </summary>
+        /// <param name="tuple">Regular expression and Regex options.</param>
+        /// <param name="answers">Random short response to the received message.</param>
+        /// <exception cref="ArgumentException">Thrown if regular expression is null or whitespace.</exception>
+        /// <exception cref="ArgumentException">Thrown if answer expression is null or whitespace.</exception>
+        /// <exception cref="ArgumentOutOfRangeException">Thrown if sticker id is less than or equal to zero.</exception>
+        /// <exception cref="InvalidEnumArgumentException">Thrown if regex options is not defined.</exception>
+        /// <exception cref="ArgumentNullException">Thrown if trigger actions in null.</exception>
+        void OnText((long peerId, string pattern, RegexOptions options) tuple, params string[] answers);
+        
         /// <summary>
         ///     Trigger on a photo command.
         /// </summary>

@@ -2,6 +2,7 @@
 using System.Collections.Concurrent;
 using System.ComponentModel;
 using System.Linq;
+using System.Security.Cryptography;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
@@ -41,6 +42,10 @@ namespace VkNet.FluentCommands.GroupBot
         ///     Longpoll configuration
         /// </summary>
         private GroupLongPollConfiguration _longPollConfiguration;
+        
+        private readonly RandomNumberGenerator _rng = RandomNumberGenerator.Create();
+
+        private readonly Random _random = new Random();
 
         /// <summary>
         ///     Text commands storage.
@@ -122,6 +127,58 @@ namespace VkNet.FluentCommands.GroupBot
         {
             OnText(tuple: (tuple.peerId, tuple.pattern, RegexOptions.None), func: func);
         }
+
+        /// <inheritdoc />
+        public void OnText(string pattern, string answer)
+        {
+            OnTextHandler((null, pattern, RegexOptions.None), answer);
+        }
+        
+        /// <inheritdoc />
+        public void OnText((string pattern, RegexOptions options) tuple, string answer)
+        {
+            OnTextHandler((null, tuple.pattern, tuple.options), answer);
+        }
+        
+        /// <inheritdoc />
+        public void OnText((long peerId, string pattern) tuple, string answer)
+        {
+            OnText((tuple.peerId, tuple.pattern, RegexOptions.None), answer);
+        }
+
+        public void OnText((long peerId, string pattern, RegexOptions options) tuple, string answer)
+        { 
+            OnTextHandler(tuple, answer);
+        }
+
+        /// <inheritdoc />
+        public void OnText(string pattern, params string[] answers)
+        {
+            OnTextHandler((null, pattern, RegexOptions.None), answers[_random.Next(0, answers.Length)]);
+        }
+        
+        /// <inheritdoc />
+        public void OnText((string pattern, RegexOptions options) tuple, params string[] answers)
+        {
+            OnTextHandler((null, tuple.pattern, tuple.options), answers[_random.Next(0, answers.Length)]);
+        }
+        
+        /// <inheritdoc />
+        public void OnText((long peerId, string pattern) tuple, params string[] answers)
+        {
+            OnText((tuple.peerId, tuple.pattern, RegexOptions.None), answers);
+        }
+        
+        /// <inheritdoc />
+        public void OnText((long peerId, string pattern, RegexOptions options) tuple, params string[] answers)
+        {
+            if (answers.Length == 0)
+            {
+                throw new ArgumentException("Value cannot be an empty collection.", nameof(answers));
+            }
+
+            OnTextHandler(tuple, answers[_random.Next(0, answers.Length)]);
+        }
         
         /// <inheritdoc />
         public void OnText((long peerId, string pattern, RegexOptions options) tuple, Func<IVkApi, GroupUpdate, CancellationToken, Task> func)
@@ -160,6 +217,30 @@ namespace VkNet.FluentCommands.GroupBot
             }
 
             _textCommands.TryAdd(key: (tuple.peerId, tuple.pattern, tuple.options), value: func);
+        }
+        
+        /// <summary>
+        ///     The handler for all incoming short message triggers
+        /// </summary>
+        /// <param name="tuple">Regular expression and Regex options.</param>
+        /// <param name="answer">Short response to the received message.</param>
+        /// <exception cref="ArgumentException">Thrown if regular expression is null or whitespace.</exception>
+        /// <exception cref="ArgumentException">Thrown if answer expression is null or whitespace.</exception>
+        /// <exception cref="InvalidEnumArgumentException">Thrown if regex options is not defined.</exception>
+        /// <exception cref="ArgumentNullException">Thrown if trigger actions in null.</exception>
+        private void OnTextHandler((long? peerId, string pattern, RegexOptions options) tuple, string answer)
+        {
+            if (string.IsNullOrWhiteSpace(answer))
+            {
+                throw new ArgumentException("Value cannot be null or whitespace.", nameof(answer));
+            }
+            
+            OnTextHandler(tuple, async (api, update, token) =>
+            {
+                token.ThrowIfCancellationRequested();
+                var message = update.MessageNew.Message;
+                await SendAsync(message.PeerId, answer);
+            });
         }
 
         /// <inheritdoc />
@@ -418,6 +499,41 @@ namespace VkNet.FluentCommands.GroupBot
             });
         }
 
+        /// <summary>
+        ///     Sends a private message.
+        /// </summary>
+        /// <param name="peerId">
+        ///     The ID of the destination. For a group conversation: 2000000000 + conversation id. For
+        ///     communities: - community id.
+        /// </param>
+        /// <param name="message">
+        ///     Private message text (required if the parameter is not set attachment)
+        /// </param>
+        private async Task SendAsync(long? peerId, string message)
+        {
+            await _botClient.Messages.SendAsync(new MessagesSendParams
+            {
+                PeerId = peerId,
+                Message = message,
+                RandomId = GetRandomId()
+            });
+        }
+        
+        /// <summary>
+        ///     Returns unique identifier, used to prevent re-sending same message.
+        ///     Is saved with the message and is available in the message history.
+        /// </summary>
+        /// <code>
+        ///    await _vkApi.Messages.SendAsync(new MessagesSendParams{ RandomId = GetRandomId() });
+        /// </code>
+        private int GetRandomId()
+        {
+            var intBytes = new byte[4];
+            _rng.GetBytes(intBytes);
+
+            return BitConverter.ToInt32(intBytes, 0);
+        }
+        
         /// <inheritdoc cref="IDisposable" />
         public void Dispose()
         {

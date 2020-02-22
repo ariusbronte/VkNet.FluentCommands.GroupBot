@@ -48,7 +48,7 @@ namespace VkNet.FluentCommands.GroupBot.Handlers
                 }
 
                 return Regex.IsMatch(message.Text, pattern, options);
-            }).Select(x => x.Value).SingleOrDefault();
+            }).Select(x => x.Value).FirstOrDefault();
 
             if (command == null)
             {

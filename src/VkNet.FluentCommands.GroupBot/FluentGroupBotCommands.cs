@@ -584,14 +584,13 @@ namespace VkNet.FluentCommands.GroupBot
                             var message = messageNew.Message;
                             if (!message.PeerId.HasValue) throw new System.Exception("No PeerId");
                             if (!message.FromId.HasValue) throw new System.Exception("No PeerId");
-                            
+
                             var forwardedMessages = message.ForwardedMessages?.ToArray() ?? new Message[] { };
                             var attachments = message.Attachments?.ToArray() ?? new Attachment[] { };
                             var replyMessage = message.ReplyMessage;
                             var actionObject = message.Action;
                             var type = DetectMessageType(forwardedMessages, attachments, actionObject, replyMessage);
                             var messageToProcess = new MessageToProcess(_botClient, messageNew);
-
                             switch (type)
                             {
                                 case VkMessageType.Message:
@@ -616,10 +615,10 @@ namespace VkNet.FluentCommands.GroupBot
                         {
                             var messageToProcess = new MessageToProcess(_botClient, update.MessageNew);
                             await _botExceptionEvent.TriggerHandler(messageToProcess, e, cancellationToken).ConfigureAwait(false);
-                            throw;
+                            continue;
                         }
                     }
-
+                    
                     ts = longPollHistory.Ts;
                 }
                 catch (LongPollKeyExpiredException e)

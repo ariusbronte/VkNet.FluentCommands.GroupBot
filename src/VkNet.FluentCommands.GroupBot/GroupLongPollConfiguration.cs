@@ -1,18 +1,14 @@
-﻿﻿namespace VkNet.FluentCommands.GroupBot
+﻿﻿using VkNet.FluentCommands.GroupBot.Abstractions;
+
+ namespace VkNet.FluentCommands.GroupBot
 {
-    /// <summary>
-    ///    Long poll configuration
-    /// </summary>
-    public class GroupLongPollConfiguration
+    /// <inheritdoc />
+    public class GroupLongPollConfiguration : IGroupLongPollConfiguration
     {
-        /// <summary>
-        ///     Group identifier
-        /// </summary>
+        /// <inheritdoc />
         public ulong GroupId { get; set; }
 
-        /// <summary>
-        ///     Wait time. The maximum value is 90.
-        /// </summary>
+        /// <inheritdoc />
         public int Wait { get; set; } = 25;
     }
 }

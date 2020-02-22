@@ -5,7 +5,6 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using VkNet.Abstractions;
-using VkNet.FluentCommands.GroupBot.Abstractions;
 using VkNet.Model.GroupUpdate;
 
 namespace VkNet.FluentCommands.GroupBot.Storage

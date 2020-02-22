@@ -480,7 +480,11 @@ namespace VkNet.FluentCommands.GroupBot
         {
             if (string.IsNullOrWhiteSpace(answer)) throw new ArgumentException("Value cannot be null or whitespace.", nameof(answer));
 
-            OnPhoto(async (api, update, token) => { await SendAsync(update.Message.PeerId, answer); });
+            OnPhoto(async (api, update, token) =>
+            {
+                token.ThrowIfCancellationRequested();
+                await SendAsync(update.Message.PeerId, answer);
+            });
         }
         
         /// <inheritdoc />
@@ -505,6 +509,7 @@ namespace VkNet.FluentCommands.GroupBot
             
             OnVoice(async (api, update, token) =>
             {
+                token.ThrowIfCancellationRequested();
                 await SendAsync(update.Message.PeerId, answer);
             });
         }
@@ -531,6 +536,7 @@ namespace VkNet.FluentCommands.GroupBot
             
             OnForward(async (api, update, token) =>
             {
+                token.ThrowIfCancellationRequested();
                 await SendAsync(update.Message.PeerId, answer);
             });
         }

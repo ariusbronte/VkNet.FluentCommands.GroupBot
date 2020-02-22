@@ -74,7 +74,7 @@ commands.OnException((e, token) =>
     return Task.CompletedTask;
 });
 ```
-## Extended configurations
+## Custom configurations
 ``` C#
 commands.ConfigureGroupLongPoll(new GroupLongPollConfiguration {
     GroupId = 00000,

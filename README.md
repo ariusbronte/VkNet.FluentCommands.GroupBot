@@ -37,7 +37,7 @@ commands.OnPhoto("photo triggered");
 commands.OnVoice("voice triggered");
 commands.OnSticker(163, "orejas");
 commands.OnReply("^ping$", "reply pong");
-commands.OnForward("^ping$", "forward pong");
+commands.OnForward("forward1", "forward2");
 ```
 ## Extended logic
 ``` C# 

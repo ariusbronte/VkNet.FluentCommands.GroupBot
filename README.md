@@ -58,9 +58,8 @@ commands.OnText(("^ping$", RegexOptions.IgnoreCase), async (api, update, token) 
 ```
 ## Individual logic
 ``` C#
-commands.OnText((2_000_000_000 + 1, "^ping$", RegexOptions.IgnoreCase), "pong");
-commands.OnText((2_000_000_000 + 1, "^ping$", RegexOptions.IgnoreCase), new[] {"pong1", "pong2", "pong3"});
-commands.OnText((2_000_000_000 + 1, "^ping$", RegexOptions.IgnoreCase), async (api, update, token) => {});
+commands.OnText((2_000_000_000 + 1, "^ping$", RegexOptions.IgnoreCase), "pong1");
+commands.OnText((2_000_000_000 + 2, "^ping$", RegexOptions.IgnoreCase), "pong2");
 ```
 ## Bot exception handler
 ``` C#

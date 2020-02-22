@@ -58,6 +58,7 @@ commands.OnText(("^ping$", RegexOptions.IgnoreCase), async (api, update, token) 
 ```
 ## Individual logic
 ``` C#
+commands.OnText((2_000_000_000 + 1, "^ping$", RegexOptions.IgnoreCase), "pong");
 commands.OnText((2_000_000_000, "^ping$", RegexOptions.IgnoreCase), async (api, update, token) => {});
 ```
 ## Bot exception handler
@@ -71,5 +72,17 @@ commands.OnException((e, token) =>
 {
     Console.WriteLine(e.Message);
     return Task.CompletedTask;
+});
+```
+## Extended configurations
+``` C#
+commands.ConfigureGroupLongPoll(new GroupLongPollConfiguration {
+    GroupId = 00000,
+    Wait = 25
+});
+
+await commands.InitBotAsync(new ApiAuthParams
+{
+    AccessToken = ""
 });
 ```

@@ -33,11 +33,12 @@ await commands.ReceiveMessageAsync();
 ```
 ``` C#
 commands.OnSticker("sticker triggered");
+commands.OnSticker(163, "orejas triggered");
 commands.OnPhoto("photo triggered");
 commands.OnVoice("voice triggered");
-commands.OnSticker(163, "orejas");
-commands.OnReply("^ping$", "reply pong");
-commands.OnForward("forward1", "forward2");
+commands.OnReply("reply triggered");
+commands.OnReply("^ping$", "pong"); 
+commands.OnForward("forward triggered");
 ```
 ## Extended logic
 ``` C# 
@@ -56,11 +57,13 @@ commands.OnText("^ping$", async (api, message, token) =>
 ``` C#
 commands.OnText(("^ping$", RegexOptions.IgnoreCase), async (api, update, token) => {});
 ```
+*this applies to all triggers
 ## Individual logic
 ``` C#
 commands.OnText((2_000_000_000 + 1, "^ping$", RegexOptions.IgnoreCase), "pong1");
 commands.OnText((2_000_000_000 + 2, "^ping$", RegexOptions.IgnoreCase), "pong2");
 ```
+*this applies to all triggers
 ## Bot exception handler
 ``` C#
 commands.OnBotException(async (api, update, e, token) => {});

@@ -21,27 +21,24 @@ using VkNet.FluentCommands.GroupBot;
 
 FluentGroupBotCommands commands = new FluentGroupBotCommands();
 
-commands.ConfigureGroupLongPoll(new GroupLongPollConfiguration
-{
-    GroupId = 000000
-});
+commands.ConfigureGroupLongPoll(000000U);
 
-await commands.InitBotAsync(new ApiAuthParams
-{
-    AccessToken = "very big group token"
-});
+await commands.InitBotAsync("very big group token");
 
 commands.OnText("^ping$", "pong");
 commands.OnText("^hello$", new[] {"hi!", "hey!", "good day!"});
+commands.OnText("command not found");
 
 await commands.ReceiveMessageAsync();
 ```
 ``` C#
-commands.OnSticker(async (api, update, token) => {});
-commands.OnPhoto(async (api, update, token) => {});
-commands.OnVoice(async (api, update, token) => {});
-commands.OnSticker(163, async (api, update, token) => {});
-commands.OnReply("^ping$", async (api, update, token) => {});
+commands.OnSticker("sticker triggered");
+commands.OnSticker(163, "orejas triggered");
+commands.OnPhoto("photo triggered");
+commands.OnVoice("voice triggered");
+commands.OnReply("reply triggered");
+commands.OnReply("^ping$", "pong"); 
+commands.OnForward("forward triggered");
 ```
 ## Extended logic
 ``` C# 
@@ -55,14 +52,19 @@ commands.OnText("^ping$", async (api, message, token) =>
     });
 });
 ```
+*this applies to all triggers
 ## Regular expression configuration
 ``` C#
 commands.OnText(("^ping$", RegexOptions.IgnoreCase), async (api, update, token) => {});
+commands.OnText(("^ping$", RegexOptions.IgnoreCase), "pong");
 ```
+*this applies to all triggers
 ## Individual logic
 ``` C#
-commands.OnText((2_000_000_000, "^ping$", RegexOptions.IgnoreCase), async (api, update, token) => {});
+commands.OnText((2_000_000_000 + 1, "^ping$", RegexOptions.IgnoreCase), "pong1");
+commands.OnText((2_000_000_000 + 2, "^ping$"), async (api, update, token) => {});
 ```
+*this applies to all triggers
 ## Bot exception handler
 ``` C#
 commands.OnBotException(async (api, update, e, token) => {});
@@ -74,5 +76,17 @@ commands.OnException((e, token) =>
 {
     Console.WriteLine(e.Message);
     return Task.CompletedTask;
+});
+```
+## Custom configurations
+``` C#
+commands.ConfigureGroupLongPoll(new GroupLongPollConfiguration {
+    GroupId = 00000,
+    Wait = 25
+});
+
+await commands.InitBotAsync(new ApiAuthParams
+{
+    AccessToken = ""
 });
 ```

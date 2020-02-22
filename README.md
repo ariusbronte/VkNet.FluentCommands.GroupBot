@@ -56,12 +56,13 @@ commands.OnText("^ping$", async (api, message, token) =>
 ## Regular expression configuration
 ``` C#
 commands.OnText(("^ping$", RegexOptions.IgnoreCase), async (api, update, token) => {});
+commands.OnText(("^ping$", RegexOptions.IgnoreCase), "pong");
 ```
 *this applies to all triggers
 ## Individual logic
 ``` C#
 commands.OnText((2_000_000_000 + 1, "^ping$", RegexOptions.IgnoreCase), "pong1");
-commands.OnText((2_000_000_000 + 2, "^ping$", RegexOptions.IgnoreCase), "pong2");
+commands.OnText((2_000_000_000 + 2, "^ping$"), async (api, update, token) => {});
 ```
 *this applies to all triggers
 ## Bot exception handler

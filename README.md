@@ -21,27 +21,23 @@ using VkNet.FluentCommands.GroupBot;
 
 FluentGroupBotCommands commands = new FluentGroupBotCommands();
 
-commands.ConfigureGroupLongPoll(new GroupLongPollConfiguration
-{
-    GroupId = 000000
-});
+commands.ConfigureGroupLongPoll(000000U);
 
-await commands.InitBotAsync(new ApiAuthParams
-{
-    AccessToken = "very big group token"
-});
+await commands.InitBotAsync("very big group token");
 
 commands.OnText("^ping$", "pong");
 commands.OnText("^hello$", new[] {"hi!", "hey!", "good day!"});
+commands.OnText("command not found");
 
 await commands.ReceiveMessageAsync();
 ```
 ``` C#
-commands.OnSticker(async (api, update, token) => {});
-commands.OnPhoto(async (api, update, token) => {});
-commands.OnVoice(async (api, update, token) => {});
-commands.OnSticker(163, async (api, update, token) => {});
-commands.OnReply("^ping$", async (api, update, token) => {});
+commands.OnSticker("sticker triggered");
+commands.OnPhoto("photo triggered");
+commands.OnVoice("voice triggered");
+commands.OnSticker(163, "orejas");
+commands.OnReply("^ping$", "reply pong");
+commands.OnForward("^ping$, "forward pong");
 ```
 ## Extended logic
 ``` C# 
@@ -55,6 +51,7 @@ commands.OnText("^ping$", async (api, message, token) =>
     });
 });
 ```
+*this applies to all triggers
 ## Regular expression configuration
 ``` C#
 commands.OnText(("^ping$", RegexOptions.IgnoreCase), async (api, update, token) => {});

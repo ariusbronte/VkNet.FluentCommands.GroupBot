@@ -95,7 +95,7 @@ namespace VkNet.FluentCommands.GroupBot
             _longPollConfiguration = new GroupLongPollConfiguration {GroupId = groupId};
         }
 
-        #region OnTextHandlers
+        #region TextHandlers
         /// <inheritdoc />
         public void OnText(Func<IVkApi, MessageNew, CancellationToken, Task> handler)
         {
@@ -233,7 +233,7 @@ namespace VkNet.FluentCommands.GroupBot
         }
         #endregion
 
-        #region OnReplyHandlers
+        #region ReplyHandlers
         /// <inheritdoc />
         public void OnReply(Func<IVkApi, MessageNew, CancellationToken, Task> handler)
         {
@@ -604,8 +604,7 @@ namespace VkNet.FluentCommands.GroupBot
         }
         #endregion
         
-        #region EventHandlers
-
+        #region PhotoHandlers
         /// <inheritdoc />
         public void OnPhoto(Func<IVkApi, MessageNew, CancellationToken, Task> handler)
         {
@@ -632,7 +631,9 @@ namespace VkNet.FluentCommands.GroupBot
             
             OnPhoto(answers[_random.Next(0, answers.Length)]);
         }
+        #endregion
         
+        #region VoiceHandlers
         /// <inheritdoc />
         public void OnVoice(Func<IVkApi, MessageNew, CancellationToken, Task> handler)
         {
@@ -659,7 +660,9 @@ namespace VkNet.FluentCommands.GroupBot
             
             OnVoice(answers[_random.Next(0, answers.Length)]);
         }
-
+        #endregion
+        
+        #region ExceptionHandlers
         /// <inheritdoc />
         public void OnBotException(Func<IVkApi, MessageNew, System.Exception, CancellationToken, Task> handler)
         {

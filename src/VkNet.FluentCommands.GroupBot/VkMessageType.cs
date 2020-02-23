@@ -38,6 +38,11 @@
         /// <summary>
         ///     Video message type.
         /// </summary>
-        Video
+        Video,
+        
+        /// <summary>
+        ///     Audio message type.
+        /// </summary>
+        Audio
     }
 }

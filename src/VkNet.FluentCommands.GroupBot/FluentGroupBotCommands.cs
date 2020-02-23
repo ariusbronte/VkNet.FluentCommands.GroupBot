@@ -42,6 +42,7 @@ namespace VkNet.FluentCommands.GroupBot
         private readonly PhotoEventStore _photoEvent = new PhotoEventStore();
         private readonly VoiceEventStore _voiceEvent = new VoiceEventStore();
         private readonly VideoEventStore _videoEvent = new VideoEventStore();
+        private readonly AudioEventStore _audioEvent = new AudioEventStore();
 
         private readonly BotExceptionEventStore _botExceptionEvent = new BotExceptionEventStore();
         private readonly ExceptionEventStore _exceptionEvent = new ExceptionEventStore();
@@ -692,6 +693,36 @@ namespace VkNet.FluentCommands.GroupBot
         }
         #endregion
         
+        #region MusicHandlers
+        /// <inheritdoc />
+        public void OnAudio(Func<IVkApi, MessageNew, CancellationToken, Task> handler)
+        {
+            _audioEvent.SetHandler(handler);
+        }
+        
+        /// <inheritdoc />
+        public void OnAudio(string answer)
+        {
+            if (string.IsNullOrWhiteSpace(answer)) throw new ArgumentException("Value cannot be null or whitespace.", nameof(answer));
+            
+            OnAudio(async (api, update, token) =>
+            {
+                token.ThrowIfCancellationRequested();
+                await SendAsync(update.Message.PeerId, answer);
+            });
+        }
+        
+        /// <inheritdoc />
+        public void OnAudio(params string[] answers)
+        {
+            if (answers == null) throw new ArgumentNullException(nameof(answers));
+            if (answers.Length == 0) throw new ArgumentException("Value cannot be an empty collection.", nameof(answers));
+            
+            OnAudio(answers[_random.Next(0, answers.Length)]);
+        }
+        #endregion
+
+        
         #region ExceptionHandlers
         /// <inheritdoc />
         public void OnBotException(Func<IVkApi, MessageNew, System.Exception, CancellationToken, Task> handler)
@@ -757,6 +788,9 @@ namespace VkNet.FluentCommands.GroupBot
                                 case VkMessageType.Video:
                                     await _videoEvent.TriggerHandler(messageToProcess, cancellationToken).ConfigureAwait(false);
                                     continue;
+                                case VkMessageType.Audio:
+                                    await _audioEvent.TriggerHandler(messageToProcess, cancellationToken).ConfigureAwait(false);
+                                    continue;
                                 default:
                                     throw new ArgumentOutOfRangeException();
                             }
@@ -802,6 +836,7 @@ namespace VkNet.FluentCommands.GroupBot
             if (attachments.Any(x => x.Type == typeof(Photo))) return VkMessageType.Photo;
             if (attachments.Any(x => x.Type == typeof(AudioMessage))) return VkMessageType.Voice;
             if (attachments.Any(x => x.Type == typeof(Video))) return VkMessageType.Video;
+            if (attachments.Any(x => x.Type == typeof(Audio))) return VkMessageType.Audio;
             
             return VkMessageType.Message;
         }

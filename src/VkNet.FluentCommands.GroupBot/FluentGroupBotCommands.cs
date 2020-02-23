@@ -37,10 +37,10 @@ namespace VkNet.FluentCommands.GroupBot
         private readonly TextCommandsStore _textCommands = new TextCommandsStore();
         private readonly ReplyCommandsStore _replyCommands = new ReplyCommandsStore();
         private readonly StickerCommandsStore _stickerCommands = new StickerCommandsStore();
+        private readonly ForwardCommandsStore _forwardCommands = new ForwardCommandsStore();
         
         private readonly PhotoEventStore _photoEvent = new PhotoEventStore();
         private readonly VoiceEventStore _voiceEvent = new VoiceEventStore();
-        private readonly ForwardEventStore _forwardEvent = new ForwardEventStore();
 
         private readonly BotExceptionEventStore _botExceptionEvent = new BotExceptionEventStore();
         private readonly ExceptionEventStore _exceptionEvent = new ExceptionEventStore();
@@ -368,6 +368,143 @@ namespace VkNet.FluentCommands.GroupBot
         }
         #endregion
         
+        #region ForwardHandlers
+        /// <inheritdoc />
+        public void OnForward(Func<IVkApi, MessageNew, CancellationToken, Task> handler)
+        {
+            _forwardCommands.SetHandler(handler);
+        }
+        
+        /// <inheritdoc />
+        public void OnForward(string pattern, Func<IVkApi, MessageNew, CancellationToken, Task> handler)
+        {
+            _forwardCommands.Store((null, pattern, RegexOptions.None), handler);
+        }
+        
+        /// <inheritdoc />
+        public void OnForward((string pattern, RegexOptions options) tuple, Func<IVkApi, MessageNew, CancellationToken, Task> handler)
+        {
+            _forwardCommands.Store((null, tuple.pattern, tuple.options), handler);
+        }
+        
+        /// <inheritdoc />
+        public void OnForward((long peerId, string pattern) tuple, Func<IVkApi, MessageNew, CancellationToken, Task> handler)
+        {
+            OnForward((tuple.peerId, tuple.pattern, RegexOptions.None), handler);
+        }
+        
+        /// <inheritdoc />
+        public void OnForward((long peerId, string pattern, RegexOptions options) tuple, Func<IVkApi, MessageNew, CancellationToken, Task> handler)
+        {
+            if (tuple.peerId <= 0) throw new ArgumentOutOfRangeException(nameof(tuple.peerId));
+
+            _forwardCommands.Store(tuple, handler);
+        }
+        
+        public void OnForward(string answer)
+        {
+            if (string.IsNullOrWhiteSpace(answer)) throw new ArgumentException("Value cannot be null or whitespace.", nameof(answer));
+            
+            OnForward(async (api, update, token) =>
+            {
+                token.ThrowIfCancellationRequested();
+                await SendAsync(update.Message.PeerId, answer);
+            });
+        }
+
+        /// <inheritdoc />
+        public void OnForward(string pattern, string answer)
+        {
+            OnForwardHandler((null, pattern, RegexOptions.None), answer);
+        }
+        
+        /// <inheritdoc />
+        public void OnForward((string pattern, RegexOptions options) tuple, string answer)
+        {
+            OnForwardHandler((null, tuple.pattern, tuple.options), answer);
+        }
+        
+        /// <inheritdoc />
+        public void OnForward((long peerId, string pattern) tuple, string answer)
+        {
+            OnForward((tuple.peerId, tuple.pattern, RegexOptions.None), answer);
+        }
+        
+        /// <inheritdoc />
+        public void OnForward((long peerId, string pattern, RegexOptions options) tuple, string answer)
+        { 
+            if (tuple.peerId <= 0) throw new ArgumentOutOfRangeException(nameof(tuple.peerId));
+
+            OnForwardHandler(tuple, answer);
+        }
+        
+        /// <inheritdoc />
+        public void OnForward(params string[] answers)
+        {
+            if (answers == null) throw new ArgumentNullException(nameof(answers));
+            if (answers.Length == 0) throw new ArgumentException("Value cannot be an empty collection.", nameof(answers));
+            
+            OnForward(async (api, update, token) =>
+            {
+                token.ThrowIfCancellationRequested();
+                await SendAsync(update.Message.PeerId, answers[_random.Next(0, answers.Length)]);
+            });
+        }
+        
+        /// <inheritdoc />
+        public void OnForward(string pattern, params string[] answers)
+        {
+            if (answers == null) throw new ArgumentNullException(nameof(answers));
+            if (answers.Length == 0) throw new ArgumentException("Value cannot be an empty collection.", nameof(answers));
+            
+            OnForwardHandler((null, pattern, RegexOptions.None), answers[_random.Next(0, answers.Length)]);
+        }
+        
+        /// <inheritdoc />
+        public void OnForward((string pattern, RegexOptions options) tuple, params string[] answers)
+        {
+            if (answers == null) throw new ArgumentNullException(nameof(answers));
+            if (answers.Length == 0) throw new ArgumentException("Value cannot be an empty collection.", nameof(answers));
+            
+            OnForwardHandler((null, tuple.pattern, tuple.options), answers[_random.Next(0, answers.Length)]);
+        }
+        
+        /// <inheritdoc />
+        public void OnForward((long peerId, string pattern) tuple, params string[] answers)
+        {
+            OnText((tuple.peerId, tuple.pattern, RegexOptions.None), answers);
+        }
+        
+        /// <inheritdoc />
+        public void OnForward((long peerId, string pattern, RegexOptions options) tuple, params string[] answers)
+        {
+            if (tuple.peerId <= 0) throw new ArgumentOutOfRangeException(nameof(tuple.peerId));
+            if (answers == null) throw new ArgumentNullException(nameof(answers));
+            if (answers.Length == 0) throw new ArgumentException("Value cannot be an empty collection.", nameof(answers));
+
+            OnForwardHandler(tuple, answers[_random.Next(0, answers.Length)]);
+        }
+        
+        /// <summary>
+        ///     Common logic of abstracted forward handlers.
+        /// </summary>
+        /// <param name="tuple">Regular expression and Regex options.</param>
+        /// <param name="answer">Text response.</param>
+        /// <exception cref="ArgumentException">Thrown if regular expression is null or whitespace.</exception>
+        /// <exception cref="InvalidEnumArgumentException">Thrown if regex options is not defined.</exception>
+        /// <exception cref="System.ArgumentException">Thrown if answer is null or whitespace.</exception>
+        private void OnForwardHandler((long? peerId, string pattern, RegexOptions options) tuple, string answer)
+        {
+            if (string.IsNullOrWhiteSpace(answer)) throw new ArgumentException("Value cannot be null or whitespace.", nameof(answer));
+            
+            _forwardCommands.Store(tuple, async (api, update, token) =>
+            {
+                token.ThrowIfCancellationRequested();
+                await SendAsync(update.Message.PeerId, answer);
+            });
+        }
+        #endregion
+
         #region StickerHandlers
         /// <inheritdoc />
         public void OnSticker(Func<IVkApi, MessageNew, CancellationToken, Task> handler)
@@ -524,33 +661,6 @@ namespace VkNet.FluentCommands.GroupBot
         }
 
         /// <inheritdoc />
-        public void OnForward(Func<IVkApi, MessageNew, CancellationToken, Task> handler)
-        {
-            _forwardEvent.SetHandler(handler);
-        }
-        
-        /// <inheritdoc />
-        public void OnForward(string answer)
-        {
-            if (string.IsNullOrWhiteSpace(answer)) throw new ArgumentException("Value cannot be null or whitespace.", nameof(answer));
-            
-            OnForward(async (api, update, token) =>
-            {
-                token.ThrowIfCancellationRequested();
-                await SendAsync(update.Message.PeerId, answer);
-            });
-        }
-        
-        /// <inheritdoc />
-        public void OnForward(params string[] answers)
-        {
-            if (answers == null) throw new ArgumentNullException(nameof(answers));
-            if (answers.Length == 0) throw new ArgumentException("Value cannot be an empty collection.", nameof(answers));
-            
-            OnForward(answers[_random.Next(0, answers.Length)]);
-        }
-        
-        /// <inheritdoc />
         public void OnBotException(Func<IVkApi, MessageNew, System.Exception, CancellationToken, Task> handler)
         {
             _botExceptionEvent.SetHandler(handler);
@@ -602,10 +712,8 @@ namespace VkNet.FluentCommands.GroupBot
                                 case VkMessageType.Message:
                                 case VkMessageType.Reply:
                                 case VkMessageType.Sticker:
-                                    await CreateCommandHandler(type).Handle(messageToProcess, cancellationToken).ConfigureAwait(false);
-                                    continue;
                                 case VkMessageType.Forward:
-                                    await _forwardEvent.TriggerHandler(messageToProcess, cancellationToken).ConfigureAwait(false);
+                                    await CreateCommandHandler(type).Handle(messageToProcess, cancellationToken).ConfigureAwait(false);
                                     continue;
                                 case VkMessageType.Photo:
                                     await _photoEvent.TriggerHandler(messageToProcess, cancellationToken).ConfigureAwait(false);
@@ -663,6 +771,7 @@ namespace VkNet.FluentCommands.GroupBot
         
         private ICommandHandler<MessageToProcess> CreateCommandHandler(VkMessageType vkMessageType)
         {
+            if(vkMessageType == VkMessageType.Forward) return new ForwardCommandHandler(_forwardCommands);
             if(vkMessageType == VkMessageType.Reply) return new ReplyCommandHandler(_replyCommands);
             if(vkMessageType == VkMessageType.Sticker) return new StickerCommandHandler(_stickerCommands);
             

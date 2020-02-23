@@ -419,6 +419,197 @@ namespace VkNet.FluentCommands.GroupBot.Abstractions
         /// <exception cref="ArgumentNullException">Thrown if answers is null.</exception>
         /// <exception cref="System.ArgumentException">Thrown if answers is empty.</exception>
         void OnReply((long peerId, string pattern, RegexOptions options) tuple, params string[] answers);
+        
+        /// <summary>
+        ///     Global extended handler of all forward messages.
+        ///     Triggered if no matches are found or missing in the <see cref="VkNet.FluentCommands.GroupBot.Storage.TextCommandsStore"/>.
+        /// </summary>
+        /// <remarks>Is not required.</remarks>
+        /// <param name="handler">Handler logic.</param>
+        /// <exception cref="System.ArgumentNullException">Thrown if handler is null.</exception>
+        void OnForward(Func<IVkApi, MessageNew, CancellationToken, Task> handler);
+
+        /// <summary>
+        ///     The extended handler for the incoming forward message.
+        ///     Compares the specified regular expression with the text of the incoming forward message.
+        /// </summary>
+        /// <param name="pattern">Regular expression.</param>
+        /// <param name="handler">Handler logic.</param>
+        /// <exception cref="System.ArgumentException">Thrown if regular expression is null or whitespace.</exception>
+        /// <exception cref="System.ArgumentNullException">Thrown if handler in null.</exception>
+        void OnForward(string pattern, Func<IVkApi, MessageNew, CancellationToken, Task> handler);
+
+        /// <summary>
+        ///     The extended handler for the incoming forward message.
+        ///     Compares the specified regular expression with the text of
+        ///     the incoming forward message based on the regular expression options.
+        /// </summary>
+        /// <param name="tuple">Regular expression with options.</param>
+        /// <param name="handler">Handler logic.</param>
+        /// <exception cref="System.ArgumentException">Thrown if regular expression is null or whitespace.</exception>
+        /// <exception cref="System.ComponentModel.InvalidEnumArgumentException">Thrown if regex options is not defined.</exception>
+        /// <exception cref="System.ArgumentNullException">Thrown if handler in null.</exception>
+        void OnForward((string pattern, RegexOptions options) tuple, Func<IVkApi, MessageNew, CancellationToken, Task> handler);
+
+        /// <summary>
+        ///     The extended handler for the incoming forward message.
+        ///     Compares the specified regular expression with the text of
+        ///     the incoming forward message. Only works for an individual conversation.
+        /// </summary>
+        /// <param name="tuple">Regular expression with individual conversation id.</param>
+        /// <param name="handler">Handler logic.</param>
+        /// <exception cref="System.ArgumentOutOfRangeException">Thrown if peerId is less than or equal to zero.</exception>
+        /// <exception cref="System.ArgumentException">Thrown if regular expression is null or whitespace.</exception>
+        /// <exception cref="System.ArgumentNullException">Thrown if handler in null.</exception>        
+        void OnForward((long peerId, string pattern) tuple, Func<IVkApi, MessageNew, CancellationToken, Task> handler);
+
+        /// <summary>
+        ///     The extended handler for the incoming forward message.
+        ///     Compares the specified regular expression with the text of
+        ///     the incoming forward message based on the regular expression options.
+        ///     Only works for an individual conversation.
+        /// </summary>
+        /// <param name="tuple">Regular expression with options and individual conversation id.</param>
+        /// <param name="handler">Handler logic.</param>
+        /// <exception cref="System.ArgumentOutOfRangeException">Thrown if peerId is less than or equal to zero.</exception>
+        /// <exception cref="System.ArgumentException">Thrown if regular expression is null or whitespace.</exception>
+        /// <exception cref="System.ComponentModel.InvalidEnumArgumentException">Thrown if regex options is not defined.</exception>
+        /// <exception cref="System.ArgumentNullException">Thrown if handler in null.</exception>
+        void OnForward((long peerId, string pattern, RegexOptions options) tuple, Func<IVkApi, MessageNew, CancellationToken, Task> handler);
+
+        /// <summary>
+        ///     Global <c>NOT</c> extended handler of all incoming forward messages.
+        ///     Triggered if no matches are found or missing in the <see cref="VkNet.FluentCommands.GroupBot.Storage.ForwardCommandsStore"/>.
+        /// </summary>
+        /// <remarks>Is not required.</remarks>
+        /// <remarks>Is an abstraction over the main handler.</remarks>
+        /// <param name="answer">Text response.</param>
+        /// <exception cref="System.ArgumentException">Thrown if answer is null or whitespace.</exception>
+        void OnForward(string answer);
+
+        /// <summary>
+        ///     The <c>NOT</c> extended handler for the incoming forward message.
+        ///     Compares the specified regular expression with the text of the incoming message.
+        /// </summary>
+        /// <remarks>Is an abstraction over the main handler.</remarks>
+        /// <param name="pattern">Regular expression.</param>
+        /// <param name="answer">Text response.</param>
+        /// <exception cref="System.ArgumentException">Thrown if regular expression is null or whitespace.</exception>
+        /// <exception cref="System.ArgumentException">Thrown if answer in null or whitespace.</exception>
+        void OnForward(string pattern, string answer);
+
+        /// <summary>
+        ///     The <c>NOT</c> extended handler for the incoming forward message.
+        ///     Compares the specified regular expression with the text of
+        ///     the incoming forward message based on the regular expression options.
+        /// </summary>
+        /// <remarks>Is an abstraction over the main handler.</remarks>
+        /// <param name="tuple">Regular expression with options.</param>
+        /// <param name="answer">Text response.</param>
+        /// <exception cref="System.ArgumentException">Thrown if regular expression is null or whitespace.</exception>
+        /// <exception cref="System.ComponentModel.InvalidEnumArgumentException">Thrown if regex options is not defined.</exception>
+        /// <exception cref="System.ArgumentException">Thrown if answer in null or whitespace.</exception>
+        void OnForward((string pattern, RegexOptions options) tuple, string answer);
+
+        /// <summary>
+        ///     The <c>NOT</c> extended handler for the incoming forward message.
+        ///     Compares the specified regular expression with the text of
+        ///     the incoming forward message. Only works for an individual conversation.
+        /// </summary>
+        /// <remarks>Is an abstraction over the main handler.</remarks>
+        /// <param name="tuple">Regular expression with individual conversation id.</param>
+        /// <param name="answer">Text response.</param>
+        /// <exception cref="System.ArgumentOutOfRangeException">Thrown if peerId is less than or equal to zero.</exception>
+        /// <exception cref="System.ArgumentException">Thrown if regular expression is null or whitespace.</exception>
+        /// <exception cref="System.ArgumentException">Thrown if answer in null or whitespace.</exception>
+        void OnForward((long peerId, string pattern) tuple, string answer);
+
+        /// <summary>
+        ///     The <c>NOT</c> extended handler for the incoming forward message.
+        ///     Compares the specified regular expression with the text of
+        ///     the incoming forward message based on the regular expression options.
+        ///     Only works for an individual conversation.
+        /// </summary>
+        /// <remarks>Is an abstraction over the main handler.</remarks>
+        /// <param name="tuple">Regular expression with options and individual conversation id.</param>
+        /// <param name="answer">Text response.</param>
+        /// <exception cref="System.ArgumentOutOfRangeException">Thrown if peerId is less than or equal to zero.</exception>
+        /// <exception cref="System.ArgumentException">Thrown if regular expression is null or whitespace.</exception>
+        /// <exception cref="System.ComponentModel.InvalidEnumArgumentException">Thrown if regex options is not defined.</exception>
+        /// <exception cref="System.ArgumentNullException">Thrown if answer in null or whitespace.</exception>
+        void OnForward((long peerId, string pattern, RegexOptions options) tuple, string answer);
+
+        /// <summary>
+        ///     Global <c>NOT</c> extended handler of all incoming forward messages.
+        ///     Triggered if no matches are found or missing in the <see cref="VkNet.FluentCommands.GroupBot.Storage.ForwardCommandsStore"/>.
+        /// </summary>
+        /// <remarks>Is not required.</remarks>
+        /// <remarks>Is an abstraction over the main handler.</remarks>
+        /// <remarks>Selects a random string from the array to send the message to.</remarks>
+        /// <param name="answers">Text responses.</param>
+        /// <exception cref="ArgumentNullException">Thrown if answers is null.</exception>
+        /// <exception cref="System.ArgumentException">Thrown if answers is empty.</exception>
+        void OnForward(params string[] answers);
+
+        /// <summary>
+        ///     The <c>NOT</c> extended handler for the incoming forward message.
+        ///     Compares the specified regular expression with the text of the incoming message.
+        /// </summary>
+        /// <remarks>Is an abstraction over the main handler.</remarks>
+        /// <remarks>Selects a random string from the array to send the message to.</remarks>
+        /// <param name="pattern">Regular expression.</param>
+        /// <param name="answers">Text responses.</param>
+        /// <exception cref="System.ArgumentException">Thrown if regular expression is null or whitespace.</exception>
+        /// <exception cref="ArgumentNullException">Thrown if answers is null.</exception>
+        /// <exception cref="System.ArgumentException">Thrown if answers is empty.</exception>
+        void OnForward(string pattern, params string[] answers);
+
+        /// <summary>
+        ///     The <c>NOT</c> extended handler for the incoming forward message.
+        ///     Compares the specified regular expression with the text of
+        ///     the incoming forward message based on the regular expression options.
+        /// </summary>
+        /// <remarks>Is an abstraction over the main handler.</remarks>
+        /// <remarks>Selects a random string from the array to send the message to.</remarks>
+        /// <param name="tuple">Regular expression with options.</param>
+        /// <param name="answers">Text responses.</param>
+        /// <exception cref="System.ArgumentException">Thrown if regular expression is null or whitespace.</exception>
+        /// <exception cref="System.ComponentModel.InvalidEnumArgumentException">Thrown if regex options is not defined.</exception>
+        /// <exception cref="ArgumentNullException">Thrown if answers is null.</exception>
+        /// <exception cref="System.ArgumentException">Thrown if answers is empty.</exception>
+        void OnForward((string pattern, RegexOptions options) tuple, params string[] answers);
+
+        /// <summary>
+        ///     The <c>NOT</c> extended handler for the incoming forward message.
+        ///     Compares the specified regular expression with the text of
+        ///     the incoming forward message. Only works for an individual conversation.
+        /// </summary>
+        /// <remarks>Is an abstraction over the main handler.</remarks>
+        /// <remarks>Selects a random string from the array to send the message to.</remarks>
+        /// <param name="tuple">Regular expression with individual conversation id.</param>
+        /// <param name="answers">Text responses.</param>
+        /// <exception cref="System.ArgumentOutOfRangeException">Thrown if peerId is less than or equal to zero.</exception>
+        /// <exception cref="System.ArgumentException">Thrown if regular expression is null or whitespace.</exception>
+        /// <exception cref="ArgumentNullException">Thrown if answers is null.</exception>
+        /// <exception cref="System.ArgumentException">Thrown if answers is empty.</exception>
+        void OnForward((long peerId, string pattern) tuple, params string[] answers);
+
+        /// <summary>
+        ///     The <c>NOT</c> extended handler for the incoming forward message.
+        ///     Compares the specified regular expression with the text of
+        ///     the incoming forward message based on the regular expression options.
+        ///     Only works for an individual conversation.
+        /// </summary>
+        /// <remarks>Is an abstraction over the main handler.</remarks>
+        /// <remarks>Selects a random string from the array to send the message to.</remarks>
+        /// <param name="tuple">Regular expression with options and individual conversation id.</param>
+        /// <param name="answers">Text responses.</param>
+        /// <exception cref="System.ArgumentOutOfRangeException">Thrown if peerId is less than or equal to zero.</exception>
+        /// <exception cref="System.ArgumentException">Thrown if regular expression is null or whitespace.</exception>
+        /// <exception cref="System.ComponentModel.InvalidEnumArgumentException">Thrown if regex options is not defined.</exception>
+        /// <exception cref="ArgumentNullException">Thrown if answers is null.</exception>
+        /// <exception cref="System.ArgumentException">Thrown if answers is empty.</exception>
+        void OnForward((long peerId, string pattern, RegexOptions options) tuple, params string[] answers);
 
         /// <summary>
         ///     Global extended handler of all incoming sticker messages.
@@ -587,37 +778,6 @@ namespace VkNet.FluentCommands.GroupBot.Abstractions
         /// <exception cref="ArgumentNullException">Thrown if answers is null.</exception>
         /// <exception cref="System.ArgumentException">Thrown if answers is empty.</exception>
         void OnVoice(params string[] answers);
-        
-        /// <summary>
-        ///     Global extended handler of all incoming forward messages.
-        ///     Triggered if no matches are found or missing in the <see cref="VkNet.FluentCommands.GroupBot.Storage.ForwardEventStore"/>.
-        /// </summary>
-        /// <remarks>Is not required.</remarks>
-        /// <param name="handler">Handler logic.</param>
-        /// <exception cref="System.ArgumentNullException">Thrown if handler is null.</exception>
-        void OnForward(Func<IVkApi, MessageNew, CancellationToken, Task> handler);
-        
-        /// <summary>
-        ///     Global <c>NOT</c> extended handler of all incoming forward messages.
-        ///     Triggered if no matches are found or missing in the <see cref="VkNet.FluentCommands.GroupBot.Storage.ForwardEventStore"/>.
-        /// </summary>
-        /// <remarks>Is not required.</remarks>
-        /// <remarks>Is an abstraction over the main handler.</remarks>
-        /// <param name="answer">Text response.</param>
-        /// <exception cref="System.ArgumentException">Thrown if answer is null or whitespace.</exception>
-        void OnForward(string answer);
-        
-        /// <summary>
-        ///     Global <c>NOT</c> extended handler of all incoming forward messages.
-        ///     Triggered if no matches are found or missing in the <see cref="VkNet.FluentCommands.GroupBot.Storage.ForwardEventStore"/>.
-        /// </summary>
-        /// <remarks>Is not required.</remarks>
-        /// <remarks>Is an abstraction over the main handler.</remarks>
-        /// <remarks>Selects a random string from the array to send the message to.</remarks>
-        /// <param name="answers">Text responses.</param>
-        /// <exception cref="ArgumentNullException">Thrown if answers is null.</exception>
-        /// <exception cref="System.ArgumentException">Thrown if answers is empty.</exception>
-        void OnForward(params string[] answers);
 
         /// <summary>
         ///     The handler for all exceptions long poll.

@@ -699,7 +699,7 @@ namespace VkNet.FluentCommands.GroupBot
                             var messageNew = update.MessageNew;
                             var message = messageNew.Message;
                             if (!message.PeerId.HasValue) throw new System.Exception("No PeerId");
-                            if (!message.FromId.HasValue) throw new System.Exception("No PeerId");
+                            if (!message.FromId.HasValue) throw new System.Exception("No FromId");
 
                             var forwardedMessages = message.ForwardedMessages?.ToArray() ?? new Message[] { };
                             var attachments = message.Attachments?.ToArray() ?? new Attachment[] { };

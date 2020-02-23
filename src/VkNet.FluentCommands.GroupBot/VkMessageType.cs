@@ -43,6 +43,11 @@
         /// <summary>
         ///     Audio message type.
         /// </summary>
-        Audio
+        Audio,
+        
+        /// <summary>
+        ///     Document message type.
+        /// </summary>
+        Document
     }
 }

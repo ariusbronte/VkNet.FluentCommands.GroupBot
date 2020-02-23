@@ -43,6 +43,7 @@ namespace VkNet.FluentCommands.GroupBot
         private readonly VoiceEventStore _voiceEvent = new VoiceEventStore();
         private readonly VideoEventStore _videoEvent = new VideoEventStore();
         private readonly AudioEventStore _audioEvent = new AudioEventStore();
+        private readonly DocumentEventStore _documentEvent = new DocumentEventStore();
 
         private readonly BotExceptionEventStore _botExceptionEvent = new BotExceptionEventStore();
         private readonly ExceptionEventStore _exceptionEvent = new ExceptionEventStore();
@@ -722,6 +723,34 @@ namespace VkNet.FluentCommands.GroupBot
         }
         #endregion
 
+        #region DocumentHandlers
+        /// <inheritdoc />
+        public void OnDocument(Func<IVkApi, MessageNew, CancellationToken, Task> handler)
+        {
+            _documentEvent.SetHandler(handler);
+        }
+        
+        /// <inheritdoc />
+        public void OnDocument(string answer)
+        {
+            if (string.IsNullOrWhiteSpace(answer)) throw new ArgumentException("Value cannot be null or whitespace.", nameof(answer));
+            
+            OnDocument(async (api, update, token) =>
+            {
+                token.ThrowIfCancellationRequested();
+                await SendAsync(update.Message.PeerId, answer);
+            });
+        }
+        
+        /// <inheritdoc />
+        public void OnDocument(params string[] answers)
+        {
+            if (answers == null) throw new ArgumentNullException(nameof(answers));
+            if (answers.Length == 0) throw new ArgumentException("Value cannot be an empty collection.", nameof(answers));
+            
+            OnDocument(answers[_random.Next(0, answers.Length)]);
+        }
+        #endregion
         
         #region ExceptionHandlers
         /// <inheritdoc />
@@ -791,6 +820,9 @@ namespace VkNet.FluentCommands.GroupBot
                                 case VkMessageType.Audio:
                                     await _audioEvent.TriggerHandler(messageToProcess, cancellationToken).ConfigureAwait(false);
                                     continue;
+                                case VkMessageType.Document:
+                                    await _documentEvent.TriggerHandler(messageToProcess, cancellationToken).ConfigureAwait(false);
+                                    continue;
                                 default:
                                     throw new ArgumentOutOfRangeException();
                             }
@@ -837,6 +869,7 @@ namespace VkNet.FluentCommands.GroupBot
             if (attachments.Any(x => x.Type == typeof(AudioMessage))) return VkMessageType.Voice;
             if (attachments.Any(x => x.Type == typeof(Video))) return VkMessageType.Video;
             if (attachments.Any(x => x.Type == typeof(Audio))) return VkMessageType.Audio;
+            if (attachments.Any(x => x.Type == typeof(Document))) return VkMessageType.Document;
             
             return VkMessageType.Message;
         }

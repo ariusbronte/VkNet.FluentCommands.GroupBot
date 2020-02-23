@@ -24,7 +24,7 @@ namespace VkNet.FluentCommands.GroupBot.Handlers
 
             var botClient = messageToProcess.BotClient;
             var update = messageToProcess.Message;
-            var reply = update.Message.ReplyMessage;
+            var message = update.Message;
             
             if (commands.IsEmpty)
             {
@@ -38,9 +38,9 @@ namespace VkNet.FluentCommands.GroupBot.Handlers
                 var pattern = x.Key.pattern;
                 var options = x.Key.options;
 
-                if (peerId == reply.PeerId)
+                if (peerId == message.PeerId)
                 {
-                    return Regex.IsMatch(reply.Text, pattern, options);
+                    return Regex.IsMatch(message.Text, pattern, options);
                 }
 
                 if (peerId.HasValue)
@@ -48,7 +48,7 @@ namespace VkNet.FluentCommands.GroupBot.Handlers
                     return false;
                 }
 
-                return Regex.IsMatch(reply.Text, pattern, options);
+                return Regex.IsMatch(message.Text, pattern, options);
             }).Select(x => x.Value).FirstOrDefault();
 
             if (command == null)

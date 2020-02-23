@@ -34,5 +34,10 @@
         ///     Voice message type.
         /// </summary>
         Voice,
+        
+        /// <summary>
+        ///     Video message type.
+        /// </summary>
+        Video
     }
 }

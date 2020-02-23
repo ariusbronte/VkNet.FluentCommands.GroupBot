@@ -41,6 +41,7 @@ namespace VkNet.FluentCommands.GroupBot
         
         private readonly PhotoEventStore _photoEvent = new PhotoEventStore();
         private readonly VoiceEventStore _voiceEvent = new VoiceEventStore();
+        private readonly VideoEventStore _videoEvent = new VideoEventStore();
 
         private readonly BotExceptionEventStore _botExceptionEvent = new BotExceptionEventStore();
         private readonly ExceptionEventStore _exceptionEvent = new ExceptionEventStore();
@@ -661,6 +662,35 @@ namespace VkNet.FluentCommands.GroupBot
             OnVoice(answers[_random.Next(0, answers.Length)]);
         }
         #endregion
+
+        #region VideoHandlers
+        /// <inheritdoc />
+        public void OnVideo(Func<IVkApi, MessageNew, CancellationToken, Task> handler)
+        {
+            _videoEvent.SetHandler(handler);
+        }
+        
+        /// <inheritdoc />
+        public void OnVideo(string answer)
+        {
+            if (string.IsNullOrWhiteSpace(answer)) throw new ArgumentException("Value cannot be null or whitespace.", nameof(answer));
+            
+            OnVideo(async (api, update, token) =>
+            {
+                token.ThrowIfCancellationRequested();
+                await SendAsync(update.Message.PeerId, answer);
+            });
+        }
+        
+        /// <inheritdoc />
+        public void OnVideo(params string[] answers)
+        {
+            if (answers == null) throw new ArgumentNullException(nameof(answers));
+            if (answers.Length == 0) throw new ArgumentException("Value cannot be an empty collection.", nameof(answers));
+            
+            OnVideo(answers[_random.Next(0, answers.Length)]);
+        }
+        #endregion
         
         #region ExceptionHandlers
         /// <inheritdoc />
@@ -724,6 +754,9 @@ namespace VkNet.FluentCommands.GroupBot
                                 case VkMessageType.Voice:
                                     await _voiceEvent.TriggerHandler(messageToProcess, cancellationToken).ConfigureAwait(false);
                                     continue;
+                                case VkMessageType.Video:
+                                    await _videoEvent.TriggerHandler(messageToProcess, cancellationToken).ConfigureAwait(false);
+                                    continue;
                                 default:
                                     throw new ArgumentOutOfRangeException();
                             }
@@ -768,7 +801,8 @@ namespace VkNet.FluentCommands.GroupBot
             if (attachments.Any(x => x.Type == typeof(Sticker))) return VkMessageType.Sticker;
             if (attachments.Any(x => x.Type == typeof(Photo))) return VkMessageType.Photo;
             if (attachments.Any(x => x.Type == typeof(AudioMessage))) return VkMessageType.Voice;
-
+            if (attachments.Any(x => x.Type == typeof(Video))) return VkMessageType.Video;
+            
             return VkMessageType.Message;
         }
         

@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
     <PropertyGroup>
         <TargetFrameworks>netstandard2.1;netstandard2.0;net47</TargetFrameworks>
-        <Version>2.0.1</Version>
+        <Version>2.1.0</Version>
         <Description>
             Extension for VkNet to quickly create bots.
         </Description>

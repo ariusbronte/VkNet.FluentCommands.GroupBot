@@ -48,6 +48,46 @@
         /// <summary>
         ///     Document message type.
         /// </summary>
-        Document
+        Document,
+        
+        /// <summary>
+        ///     User invited action.
+        /// </summary>
+        ChatInviteUser,
+        
+        /// <summary>
+        ///     User kicked action.
+        /// </summary>
+        ChatKickUser,
+        
+        /// <summary>
+        ///     Photo removed action.
+        /// </summary>
+        ChatPhotoRemove,
+        
+        /// <summary>
+        ///     Photo updated action.
+        /// </summary>
+        ChatPhotoUpdate,
+        
+        /// <summary>
+        ///     Message pinned action.
+        /// </summary>
+        ChatPinMessage,
+        
+        /// <summary>
+        ///     Title updated action.
+        /// </summary>
+        ChatTitleUpdate,
+        
+        /// <summary>
+        ///     Message unpinned action.
+        /// </summary>
+        ChatUnpinMessage,
+        
+        /// <summary>
+        ///     User invited by link action.
+        /// </summary>
+        ChatInviteUserByLink
     }
 }

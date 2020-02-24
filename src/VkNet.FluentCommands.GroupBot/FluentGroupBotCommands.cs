@@ -45,6 +45,15 @@ namespace VkNet.FluentCommands.GroupBot
         private readonly AudioEventStore _audioEvent = new AudioEventStore();
         private readonly DocumentEventStore _documentEvent = new DocumentEventStore();
 
+        private readonly ChatInviteUserEventStore _chatInviteUserEvent = new ChatInviteUserEventStore();
+        private readonly ChatKickUserEventStore _chatKickUserEvent = new ChatKickUserEventStore();
+        private readonly ChatPhotoRemoveEventStore _chatPhotoRemoveEvent = new ChatPhotoRemoveEventStore();
+        private readonly ChatPhotoUpdateEventStore _chatPhotoUpdateEvent = new ChatPhotoUpdateEventStore();
+        private readonly ChatPinMessageEventStore _chatPinMessageEvent = new ChatPinMessageEventStore();
+        private readonly ChatTitleUpdateEventStore _chatTitleUpdateEvent = new ChatTitleUpdateEventStore();
+        private readonly ChatUnpinMessageEventStore _chatUnpinMessageEvent = new ChatUnpinMessageEventStore();
+        private readonly ChatInviteUserByLinkEventStore _chatInviteUserByLinkEvent = new ChatInviteUserByLinkEventStore();
+
         private readonly BotExceptionEventStore _botExceptionEvent = new BotExceptionEventStore();
         private readonly ExceptionEventStore _exceptionEvent = new ExceptionEventStore();
 
@@ -752,6 +761,56 @@ namespace VkNet.FluentCommands.GroupBot
         }
         #endregion
         
+        #region EventHandlers
+        /// <inheritdoc />
+        public void OnChatInviteUserAction(Func<IVkApi, MessageNew, CancellationToken, Task> handler)
+        {
+            _chatInviteUserEvent.SetHandler(handler);
+        }
+
+        /// <inheritdoc />
+        public void OnChatKickUserAction(Func<IVkApi, MessageNew, CancellationToken, Task> handler)
+        {
+            _chatKickUserEvent.SetHandler(handler);
+        }
+
+        /// <inheritdoc />
+        public void OnChatPhotoRemoveAction(Func<IVkApi, MessageNew, CancellationToken, Task> handler)
+        {
+            _chatPhotoRemoveEvent.SetHandler(handler);
+        }
+
+        /// <inheritdoc />
+        public void OnChatPhotoUpdateAction(Func<IVkApi, MessageNew, CancellationToken, Task> handler)
+        {
+            _chatPhotoUpdateEvent.SetHandler(handler);
+        }
+
+        /// <inheritdoc />
+        public void OnChatPinMessageAction(Func<IVkApi, MessageNew, CancellationToken, Task> handler)
+        {
+            _chatPinMessageEvent.SetHandler(handler);
+        }
+
+        /// <inheritdoc />
+        public void OnChatTitleUpdateAction(Func<IVkApi, MessageNew, CancellationToken, Task> handler)
+        {
+            _chatTitleUpdateEvent.SetHandler(handler);
+        }
+
+        /// <inheritdoc />
+        public void OnChatUnpinMessageAction(Func<IVkApi, MessageNew, CancellationToken, Task> handler)
+        {
+            _chatUnpinMessageEvent.SetHandler(handler);
+        }
+
+        /// <inheritdoc />
+        public void OnChatInviteUserByLinkAction(Func<IVkApi, MessageNew, CancellationToken, Task> handler)
+        {
+            _chatInviteUserByLinkEvent.SetHandler(handler);
+        }
+        #endregion
+        
         #region ExceptionHandlers
         /// <inheritdoc />
         public void OnBotException(Func<IVkApi, MessageNew, System.Exception, CancellationToken, Task> handler)
@@ -823,6 +882,30 @@ namespace VkNet.FluentCommands.GroupBot
                                 case VkMessageType.Document:
                                     await _documentEvent.TriggerHandler(messageToProcess, cancellationToken).ConfigureAwait(false);
                                     continue;
+                                case VkMessageType.ChatInviteUser:
+                                    await _chatInviteUserEvent.TriggerHandler(messageToProcess, cancellationToken).ConfigureAwait(false);
+                                    continue;
+                                case VkMessageType.ChatKickUser:
+                                    await _chatKickUserEvent.TriggerHandler(messageToProcess, cancellationToken).ConfigureAwait(false);
+                                    continue;
+                                case VkMessageType.ChatPhotoRemove:
+                                    await _chatPhotoRemoveEvent.TriggerHandler(messageToProcess, cancellationToken).ConfigureAwait(false);
+                                    continue;
+                                case VkMessageType.ChatPhotoUpdate:
+                                    await _chatPhotoUpdateEvent.TriggerHandler(messageToProcess, cancellationToken).ConfigureAwait(false);
+                                    continue;
+                                case VkMessageType.ChatPinMessage:
+                                    await _chatPinMessageEvent.TriggerHandler(messageToProcess, cancellationToken).ConfigureAwait(false);
+                                    continue;
+                                case VkMessageType.ChatTitleUpdate:
+                                    await _chatTitleUpdateEvent.TriggerHandler(messageToProcess, cancellationToken).ConfigureAwait(false);
+                                    continue;
+                                case VkMessageType.ChatUnpinMessage:
+                                    await _chatUnpinMessageEvent.TriggerHandler(messageToProcess, cancellationToken).ConfigureAwait(false);
+                                    continue;
+                                case VkMessageType.ChatInviteUserByLink:
+                                    await _chatInviteUserByLinkEvent.TriggerHandler(messageToProcess, cancellationToken).ConfigureAwait(false);
+                                    continue;
                                 default:
                                     throw new ArgumentOutOfRangeException();
                             }
@@ -860,8 +943,20 @@ namespace VkNet.FluentCommands.GroupBot
             MessageActionObject actionObject,
             Message replyMessage)
         {
-            // todo concrete event
-            // if (actionObject != null) return VkMessageType.Event;
+            if (actionObject != null)
+            {
+                if (actionObject.Type == MessageAction.ChatInviteUser) return VkMessageType.ChatInviteUser;
+                if (actionObject.Type == MessageAction.ChatKickUser) return VkMessageType.ChatKickUser;
+                if (actionObject.Type == MessageAction.ChatPhotoRemove) return VkMessageType.ChatPhotoRemove;
+                if (actionObject.Type == MessageAction.ChatPhotoUpdate) return VkMessageType.ChatPhotoUpdate;
+                if (actionObject.Type == MessageAction.ChatPinMessage) return VkMessageType.ChatPinMessage;
+                if (actionObject.Type == MessageAction.ChatTitleUpdate) return VkMessageType.ChatTitleUpdate;
+                if (actionObject.Type == MessageAction.ChatUnpinMessage) return VkMessageType.ChatUnpinMessage;
+                if (actionObject.Type == MessageAction.ChatInviteUserByLink) return VkMessageType.ChatInviteUserByLink;
+                
+                throw new ArgumentException("action type not found");
+            }
+            
             if (forwardMessages?.Count > 0) return VkMessageType.Forward;
             if (replyMessage != null) return VkMessageType.Reply;
             if (attachments.Any(x => x.Type == typeof(Sticker))) return VkMessageType.Sticker;

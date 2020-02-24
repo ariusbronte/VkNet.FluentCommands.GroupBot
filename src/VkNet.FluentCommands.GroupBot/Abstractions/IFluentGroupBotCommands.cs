@@ -871,6 +871,62 @@ namespace VkNet.FluentCommands.GroupBot.Abstractions
         /// <exception cref="ArgumentNullException">Thrown if answers is null.</exception>
         /// <exception cref="System.ArgumentException">Thrown if answers is empty.</exception>
         void OnDocument(params string[] answers);
+
+        /// <summary>
+        ///     Triggered when user invited in chat.
+        /// </summary>
+        /// <param name="handler">Handler logic.</param>
+        /// <exception cref="System.ArgumentNullException">Thrown if handler is null.</exception>
+        void OnChatInviteUserAction(Func<IVkApi, MessageNew, CancellationToken, Task> handler);
+            
+        /// <summary>
+        ///     Triggered when user kicked from chat.
+        /// </summary>
+        /// <param name="handler">Handler logic.</param>
+        /// <exception cref="System.ArgumentNullException">Thrown if handler is null.</exception>
+        void OnChatKickUserAction(Func<IVkApi, MessageNew, CancellationToken, Task> handler);
+        
+        /// <summary>
+        ///     Triggered when photo removed from chat.
+        /// </summary>
+        /// <param name="handler">Handler logic.</param>
+        /// <exception cref="System.ArgumentNullException">Thrown if handler is null.</exception>
+        void OnChatPhotoRemoveAction(Func<IVkApi, MessageNew, CancellationToken, Task> handler);
+        
+        /// <summary>
+        ///     Triggered when photo updated in chat.
+        /// </summary>
+        /// <param name="handler">Handler logic.</param>
+        /// <exception cref="System.ArgumentNullException">Thrown if handler is null.</exception>
+        void OnChatPhotoUpdateAction(Func<IVkApi, MessageNew, CancellationToken, Task> handler);
+        
+        /// <summary>
+        ///     Triggered when message pinned in chat.
+        /// </summary>
+        /// <param name="handler">Handler logic.</param>
+        /// <exception cref="System.ArgumentNullException">Thrown if handler is null.</exception>
+        void OnChatPinMessageAction(Func<IVkApi, MessageNew, CancellationToken, Task> handler);
+        
+        /// <summary>
+        ///     Triggered when title updated in chat.
+        /// </summary>
+        /// <param name="handler">Handler logic.</param>
+        /// <exception cref="System.ArgumentNullException">Thrown if handler is null.</exception>
+        void OnChatTitleUpdateAction(Func<IVkApi, MessageNew, CancellationToken, Task> handler);
+        
+        /// <summary>
+        ///     Triggered when message unpinned in chat.
+        /// </summary>
+        /// <param name="handler">Handler logic.</param>
+        /// <exception cref="System.ArgumentNullException">Thrown if handler is null.</exception>
+        void OnChatUnpinMessageAction(Func<IVkApi, MessageNew, CancellationToken, Task> handler);
+        
+        /// <summary>
+        ///     Triggered when user invited in chat by link.
+        /// </summary>
+        /// <param name="handler">Handler logic.</param>
+        /// <exception cref="System.ArgumentNullException">Thrown if handler is null.</exception>
+        void OnChatInviteUserByLinkAction(Func<IVkApi, MessageNew, CancellationToken, Task> handler);
         
         /// <summary>
         ///     The handler for all exceptions long poll.

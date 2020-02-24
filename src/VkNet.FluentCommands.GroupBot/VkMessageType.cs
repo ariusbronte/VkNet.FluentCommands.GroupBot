@@ -51,6 +51,11 @@
         Document,
         
         /// <summary>
+        ///     Poll message type.
+        /// </summary>
+        Poll,
+        
+        /// <summary>
         ///     User invited action.
         /// </summary>
         ChatInviteUser,

@@ -43,6 +43,7 @@ namespace VkNet.FluentCommands.GroupBot
         private readonly VoiceEventStore _voiceEvent = new VoiceEventStore();
         private readonly VideoEventStore _videoEvent = new VideoEventStore();
         private readonly AudioEventStore _audioEvent = new AudioEventStore();
+        private readonly PollEventStore _pollEvent = new PollEventStore();
         private readonly DocumentEventStore _documentEvent = new DocumentEventStore();
 
         private readonly ChatInviteUserEventStore _chatInviteUserEvent = new ChatInviteUserEventStore();
@@ -761,6 +762,35 @@ namespace VkNet.FluentCommands.GroupBot
         }
         #endregion
         
+        #region PollHandlers
+        /// <inheritdoc />
+        public void OnPoll(Func<IVkApi, MessageNew, CancellationToken, Task> handler)
+        {
+            _pollEvent.SetHandler(handler);
+        }
+        
+        /// <inheritdoc />
+        public void OnPoll(string answer)
+        {
+            if (string.IsNullOrWhiteSpace(answer)) throw new ArgumentException("Value cannot be null or whitespace.", nameof(answer));
+            
+            OnPoll(async (api, update, token) =>
+            {
+                token.ThrowIfCancellationRequested();
+                await SendAsync(update.Message.PeerId, answer);
+            });
+        }
+        
+        /// <inheritdoc />
+        public void OnPoll(params string[] answers)
+        {
+            if (answers == null) throw new ArgumentNullException(nameof(answers));
+            if (answers.Length == 0) throw new ArgumentException("Value cannot be an empty collection.", nameof(answers));
+            
+            OnPoll(answers[_random.Next(0, answers.Length)]);
+        }
+        #endregion
+        
         #region EventHandlers
         /// <inheritdoc />
         public void OnChatInviteUserAction(Func<IVkApi, MessageNew, CancellationToken, Task> handler)
@@ -882,6 +912,9 @@ namespace VkNet.FluentCommands.GroupBot
                                 case VkMessageType.Document:
                                     await _documentEvent.TriggerHandler(messageToProcess, cancellationToken).ConfigureAwait(false);
                                     continue;
+                                case VkMessageType.Poll:
+                                    await _pollEvent.TriggerHandler(messageToProcess, cancellationToken).ConfigureAwait(false);
+                                    continue;
                                 case VkMessageType.ChatInviteUser:
                                     await _chatInviteUserEvent.TriggerHandler(messageToProcess, cancellationToken).ConfigureAwait(false);
                                     continue;
@@ -970,6 +1003,7 @@ namespace VkNet.FluentCommands.GroupBot
                     if (attachment.Type == typeof(Video)) return VkMessageType.Video;
                     if (attachment.Type == typeof(Audio)) return VkMessageType.Audio;
                     if (attachment.Type == typeof(Document)) return VkMessageType.Document;
+                    if (attachment.Type == typeof(Poll)) return VkMessageType.Poll;
                 }
             }
 

@@ -56,6 +56,11 @@
         Poll,
         
         /// <summary>
+        ///     Geo message type.
+        /// </summary>
+        Geo,
+        
+        /// <summary>
         ///     User invited action.
         /// </summary>
         ChatInviteUser,

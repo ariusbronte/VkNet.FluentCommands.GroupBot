@@ -43,6 +43,7 @@ namespace VkNet.FluentCommands.GroupBot
         private readonly VoiceEventStore _voiceEvent = new VoiceEventStore();
         private readonly VideoEventStore _videoEvent = new VideoEventStore();
         private readonly AudioEventStore _audioEvent = new AudioEventStore();
+        private readonly GeoEventStore _geoEvent = new GeoEventStore();
         private readonly PollEventStore _pollEvent = new PollEventStore();
         private readonly DocumentEventStore _documentEvent = new DocumentEventStore();
 
@@ -791,6 +792,35 @@ namespace VkNet.FluentCommands.GroupBot
         }
         #endregion
         
+        #region GeoHandlers
+        /// <inheritdoc />
+        public void OnGeo(Func<IVkApi, MessageNew, CancellationToken, Task> handler)
+        {
+            _geoEvent.SetHandler(handler);
+        }
+        
+        /// <inheritdoc />
+        public void OnGeo(string answer)
+        {
+            if (string.IsNullOrWhiteSpace(answer)) throw new ArgumentException("Value cannot be null or whitespace.", nameof(answer));
+            
+            OnGeo(async (api, update, token) =>
+            {
+                token.ThrowIfCancellationRequested();
+                await SendAsync(update.Message.PeerId, answer);
+            });
+        }
+        
+        /// <inheritdoc />
+        public void OnGeo(params string[] answers)
+        {
+            if (answers == null) throw new ArgumentNullException(nameof(answers));
+            if (answers.Length == 0) throw new ArgumentException("Value cannot be an empty collection.", nameof(answers));
+            
+            OnGeo(answers[_random.Next(0, answers.Length)]);
+        }
+        #endregion
+        
         #region EventHandlers
         /// <inheritdoc />
         public void OnChatInviteUserAction(Func<IVkApi, MessageNew, CancellationToken, Task> handler)
@@ -887,7 +917,8 @@ namespace VkNet.FluentCommands.GroupBot
                             var attachments = message.Attachments?.ToArray() ?? new Attachment[] { };
                             var replyMessage = message.ReplyMessage;
                             var actionObject = message.Action;
-                            var type = DetectMessageType(forwardedMessages, attachments, actionObject, replyMessage);
+                            var geo = message.Geo;
+                            var type = DetectMessageType(forwardedMessages, attachments, actionObject, geo, replyMessage);
                             var messageToProcess = new MessageToProcess(_botClient, messageNew);
                             switch (type)
                             {
@@ -914,6 +945,9 @@ namespace VkNet.FluentCommands.GroupBot
                                     continue;
                                 case VkMessageType.Poll:
                                     await _pollEvent.TriggerHandler(messageToProcess, cancellationToken).ConfigureAwait(false);
+                                    continue;
+                                case VkMessageType.Geo:
+                                    await _geoEvent.TriggerHandler(messageToProcess, cancellationToken).ConfigureAwait(false);
                                     continue;
                                 case VkMessageType.ChatInviteUser:
                                     await _chatInviteUserEvent.TriggerHandler(messageToProcess, cancellationToken).ConfigureAwait(false);
@@ -974,6 +1008,7 @@ namespace VkNet.FluentCommands.GroupBot
             IReadOnlyCollection<Message> forwardMessages,
             IReadOnlyCollection<Attachment> attachments,
             MessageActionObject actionObject,
+            Geo geo,
             Message replyMessage)
         {
             if (actionObject != null)
@@ -992,6 +1027,7 @@ namespace VkNet.FluentCommands.GroupBot
             
             if (forwardMessages?.Count > 0) return VkMessageType.Forward;
             if (replyMessage != null) return VkMessageType.Reply;
+            if (geo != null) return VkMessageType.Geo;
 
             if (attachments?.Count > 0)
             {
@@ -1006,6 +1042,7 @@ namespace VkNet.FluentCommands.GroupBot
                     if (attachment.Type == typeof(Poll)) return VkMessageType.Poll;
                 }
             }
+            
 
             return VkMessageType.Message;
         }
